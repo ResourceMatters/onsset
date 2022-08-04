@@ -9,11 +9,8 @@ onsset : Open Source Spatial Electrification Tool
 # Scope
 
 This repository contains the source code of the Open Source Spatial Electrification Tool
-([OnSSET](http://www.onsset.org/)).
+([OnSSET](http://www.onsset.org/)), modified to reflect the particular circumstances of the DRC. 
 
-
-The repository also includes sample test files available in ```.\test_data```
-and sample output files available in ```.\sample_output```.
 
 ## Installation
 

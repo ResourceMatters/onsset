@@ -35,6 +35,9 @@ if choice == 1:
     calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path)
 
 elif choice == 2:
+    gis_cost_folder = False
+    save_shapefiles = False
+
     messagebox.showinfo('OnSSET', 'Open the csv file with calibrated GIS data')
     calibrated_csv_path = filedialog.askopenfilename()
     messagebox.showinfo('OnSSET', 'Browse to RESULTS folder to save outputs')
@@ -42,4 +45,16 @@ elif choice == 2:
     messagebox.showinfo('OnSSET', 'Browse to SUMMARIES folder and name the scenario to save outputs')
     summary_folder = filedialog.askdirectory()
 
-    scenario(specs_path, calibrated_csv_path, results_folder, summary_folder)
+    gis_grid_extension = messagebox.askyesno(title='OnSSET', message='Do you wish to run with the new grid extension algorithm?')
+
+    if gis_grid_extension:
+        save_shapefiles = messagebox.askyesno(title='OnSSET', message='Do you wish to save new grid lines as vector files?')
+
+        messagebox.showinfo('OnSSET',
+                            'Select the folder with the cost rasters and power line rasters for routing algorithm')
+        gis_cost_folder = filedialog.askdirectory()
+
+    short_results = messagebox.askyesno(title='OnSSET', message='Do you wish to save the result files with fewer output columns (else all columns will be saved)?')
+
+    scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, gis_cost_folder,
+             save_shapefiles, gis_grid_extension, short_results)
