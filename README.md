@@ -28,7 +28,7 @@ After installing Anaconda you can download the repository directly or clone it t
 ```
 Once installed, open anaconda prompt and move to your local "OnSSET" directory using:
 ```
-> cd ..\OnSSET-GIS-Extraction
+> cd ..\OnSSET
 ```
 
 In order to be able to run the tool (main.ipynb and funcs.ipynb) you have to install all necessary packages. "environment.yml" contains all of these and can be easily set up by creating a new virtual environment named OnSSET_GIS (or any other name you prefer) using:
@@ -46,7 +46,7 @@ conda activate OnSSET_extraction
 With the environment activated, you can now move to the extraction directory and start a "jupyter notebook" session by simply typing:
 
 ```
-..\OnSSET-GIS-Extraction> jupyter notebook 
+..\OnSSET> jupyter notebook 
 ```
 
 If you use the gui_runner.py file to run the code in PyCharm, choose the interpreter to be OnSSET_GIS
