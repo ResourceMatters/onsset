@@ -14,41 +14,42 @@ This repository contains the source code of the Open Source Spatial Electrificat
 
 ## Installation
 
-### Requirements
+**Requirements**
 
-OnSSET requires Python > 3.5 with the following packages installed:
-- et-xmlfile
-- jdcal
-- numpy
-- openpyxl
-- pandas
-- python-dateutil
-- pytz
-- six
-- xlrd
-- notebook
-- seaborn
-- matplotlib
-- scipy
+The extraction module (as well as all supporting scripts in this repo) have been developed in Python 3. You are recommended to install [Anaconda's free distribution](https://www.anaconda.com/distribution/) as suited for your operating system. 
 
-### Install with pip
+**Install the extraction repository from GitHub**
 
-Install onsset from the Python Packaging Index (PyPI):
+After installing Anaconda you can download the repository directly or clone it to your designated local directory using:
 
 ```
-pip install onsset
+> conda install git
+> git clone https://github.com/ResourceMatters/onsset/
+```
+Once installed, open anaconda prompt and move to your local "OnSSET" directory using:
+```
+> cd ..\OnSSET-GIS-Extraction
 ```
 
-### Install from GitHub
-
-Download or clone the repository and install the package in `develop`
-(editable) mode:
+In order to be able to run the tool (main.ipynb and funcs.ipynb) you have to install all necessary packages. "environment.yml" contains all of these and can be easily set up by creating a new virtual environment named OnSSET_GIS (or any other name you prefer) using:
 
 ```
-git clone https://github.com/onsset/onsset.git
-cd onsset
-python setup.py develop
+conda env create --name OnSSET_GIS --file environment.yml
 ```
+
+This might take some time. When complete, activate the virtual environment using:
+
+```
+conda activate OnSSET_extraction
+```
+
+With the environment activated, you can now move to the extraction directory and start a "jupyter notebook" session by simply typing:
+
+```
+..\OnSSET-GIS-Extraction> jupyter notebook 
+```
+
+If you use the gui_runner.py file to run the code in PyCharm, choose the interpreter to be OnSSET_GIS
 
 ## Contact
 For more information regarding the tool, its functionality and implementation
