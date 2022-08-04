@@ -11,6 +11,13 @@ onsset : Open Source Spatial Electrification Tool
 This repository contains the source code of the Open Source Spatial Electrification Tool
 ([OnSSET](http://www.onsset.org/)), modified to reflect the particular circumstances of the DRC. 
 
+## Contains
+
+This folder contains:
+* Costs_preparation.ipynb - A notebook to develop the cost layer required for the new grid routing algorithm
+* OnSSET_notebook.ipynb - A notebook to run the OnSSET tool with or without the new grid reouting algorithm
+* onsset - a folder with the neccessary python files and the gui_runner.py file to run the OnSSET tool with or without the new grid routing algorithm using e.g. PyCharm
+* GridExtensionData.zip - a zip folder containing the neccessary layers after the Costs_preparation.ipynb to run OnSSET with the new grid algorithm 
 
 ## Installation
 
