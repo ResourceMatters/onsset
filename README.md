@@ -47,7 +47,7 @@ conda env create --name OnSSET_GIS --file environment.yml
 This might take some time. When complete, activate the virtual environment using:
 
 ```
-conda activate OnSSET_extraction
+conda activate OnSSET_GIS
 ```
 
 With the environment activated, you can now move to the extraction directory and start a "jupyter notebook" session by simply typing:
