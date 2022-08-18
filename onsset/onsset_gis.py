@@ -151,7 +151,7 @@ def find_grid_path(df, year, time_step, start_year, max_connections, max_capacit
     i = 0
     while pathfinder['paths'].sum() > 0:
         targets = df.loc[(df['FinalElecCode' + '{}'.format(year - time_step)] != 1) & (df['MaxDist'] > 0) &
-                         (df['PlannedHVLineDist'] < mv_line_max_length) (df['PreScreening' + "{}".format(year)] == 1)]
+                         (df['PlannedHVLineDist'] < mv_line_max_length) & (df['PreScreening' + "{}".format(year)] == 1)]
         targets = targets.to_crs('EPSG:3395')
         targets_for_raster = [(row.geometry, row.MaxDist) for _, row in targets.iterrows()]
 
