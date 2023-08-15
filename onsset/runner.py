@@ -514,6 +514,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, gi
         summaries_out_dir = summary_folder
 
         settlements_out_csv = os.path.join(settlements_out_dir, '{}-{}.csv'.format(country_id, scenario_name))
+        settlements_out_short_csv = os.path.join(settlements_out_dir, '{}-{}_short.csv'.format(country_id, scenario_name))
         summary_csv = os.path.join(summaries_out_dir, '{}-{}_summary.csv'.format(country_id, scenario_name))
 
         if short_results:
@@ -522,9 +523,18 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, gi
                                     'NewDemand2025', 'TotalDemand2025', 'Pop2030', 'FinalElecCode2030',
                                     'NewConnections2030', 'NewCapacity2030', 'InvestmentCost2030', 'NewDemand2030',
                                     'TotalDemand2030']]
-            df_short.to_csv(settlements_out_csv, index=False)
+            df_short.to_csv(settlements_out_short_csv, index=False)
         else:
             onsseter.df.to_csv(settlements_out_csv, index=False)
+
+            df_short = onsseter.df[
+                ['id', 'X_deg', 'Y_deg', 'Region', 'PopStartYear', 'ElecStart', 'ElecPopCalib', 'Pop2025',
+                 'FinalElecCode2025', 'NewConnections2025', 'NewCapacity2025', 'InvestmentCost2025',
+                 'NewDemand2025', 'TotalDemand2025', 'Pop2030', 'FinalElecCode2030',
+                 'NewConnections2030', 'NewCapacity2030', 'InvestmentCost2030', 'NewDemand2030',
+                 'TotalDemand2030']]
+            
+            df_short.to_csv(settlements_out_short_csv, index=False)
 
         summary_table = onsseter.calc_drc_summaries(yearsofanalysis)
 
