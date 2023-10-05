@@ -518,8 +518,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, gi
 
         if short_results:
             df_short = onsseter.df[['id', 'X_deg', 'Y_deg', 'Region', 'PopStartYear', 'ElecStart', 'ElecPopCalib', 'Pop2025',
-                                    'FinalElecCode2025', 'NewConnections2025', 'NewCapacity2025', 'InvestmentCost2025',
-                                    'NewDemand2025', 'TotalDemand2025', 'Pop2030', 'FinalElecCode2030',
+                                    'MinimumOverall2025', 'FinalElecCode2025', 'NewConnections2025', 'NewCapacity2025', 'InvestmentCost2025',
+                                    'NewDemand2025', 'TotalDemand2025', 'Pop2030', 'MinimumOverall2030', 'FinalElecCode2030',
                                     'NewConnections2030', 'NewCapacity2030', 'InvestmentCost2030', 'NewDemand2030',
                                     'TotalDemand2030']]
             df_short.to_csv(settlements_out_csv, index=False)
