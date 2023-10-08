@@ -1,20 +1,20 @@
-import sys
-# from onsset.onsset import *
-# from onsset.runner import *
 from tkinter import ttk
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 import pandas as pd
-
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from runner_modern import *
 from tkinter.filedialog import asksaveasfile
 from customtkinter import *
 from PIL import ImageTk
 from CTkMessagebox import CTkMessagebox
+from tkinter import *
 
 global df
 global end_year
+
+techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro"]
+colors = ['#73B2FF', '#EDD100', '#EDA800', '#1F6600', '#98E600', '#70A800', '#1FA800']
 
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -38,62 +38,90 @@ class App(CTk):
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2, 3), weight=1)
 
-        self.sidebar_frame = Menu(self)
-        self.tabview = Tabs(self)
+        self.df = pd.DataFrame()
+        self.end_year = 2022
 
+        self.calib = CalibrationTab(self)
+        self.scenario = ScenarioTab(self, self.df, self.end_year)
+        self.result = ResultsTab(self)
+
+        self.sidebar_frame = Menu(self, self.calib, self.scenario, self.result)
 
 
 class Menu(CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, calib, scenario, result):
         super().__init__(parent)
         self.configure(width=140)
         self.configure(corner_radius=0)
-        self.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.grid_rowconfigure(4, weight=1)
+        self.grid(row=0, column=0, rowspan=5, sticky="nsew")
+        self.grid_rowconfigure(5, weight=1)
 
-        self.create_widgets()
+        self.calib = calib
+        self.scenario = scenario
+        self.result = result
 
-    def create_widgets(self):
-        self.logo_label = CTkLabel(self, text="Settings", font=CTkFont(size=20, weight="bold"))
+        self.create_widgets(parent.scenario.df)
+
+        self.display_calibration() # Set this as the start tab
+
+    def create_widgets(self, df):
+        self.logo_label = CTkLabel(self, text="Menu", font=CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
-        # self.sidebar_button_1 = CTkButton(self, text='Calibration', command=self.display_calibration)
-        # self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
-        #
-        # self.sidebar_button_2 = CTkButton(self, text='Run scenario', command=self.display_scenario)
-        # self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
-        #
-        # self.sidebar_button_3 = CTkButton(self, text='Visualize results', command=self.display_results)
-        # self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
+        self.sidebar_button_1 = CTkButton(self, text='Calibration', command=self.display_calibration)
+        self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
+
+        self.sidebar_button_2 = CTkButton(self, text='Run scenario', command=self.display_scenario)
+        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+
+        self.sidebar_button_3 = CTkButton(self, text='Visualize results', command=self.display_results)
+        self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
+
+        # self.sidebar_button_4 = CTkButton(self, text='Save results', command=lambda: self.save_results(df))
+        # self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
 
         self.appearance_mode_label = CTkLabel(self, text="Appearance Mode", anchor="w")
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = CTkOptionMenu(self, values=["Light", "Dark"],command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 10))
 
         self.scaling_label = CTkLabel(self, text="Zoom", anchor="w")
-        self.scaling_label.grid(row=7, column=0, padx=20, pady=(10, 0))
+        self.scaling_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         self.scaling_optionemenu = CTkOptionMenu(self, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
-        self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
+        self.scaling_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 20))
 
         self.language_label = CTkLabel(self, text="Language", anchor="w")
-        self.language_label.grid(row=9, column=0, padx=20, pady=(10, 0))
+        self.language_label.grid(row=10, column=0, padx=20, pady=(10, 0))
         self.language_optionmenu = CTkOptionMenu(self, values=["English", "French"])
-        self.language_optionmenu.grid(row=10, column=0, padx=20, pady=(10, 20))
+        self.language_optionmenu.grid(row=11, column=0, padx=20, pady=(10, 20))
 
         # set default values
-        # self.sidebar_button_3.configure(state="disabled")
+        #self.sidebar_button_3.configure(state="disabled")
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
-    # def display_scenario(self):
-    #     self.tabview.set("Scenario")
-    #
-    # def display_calibration(self):
-    #     self.tabview.set("Calibration")
-    #
-    # def display_results(self):
-    #     self.tabview.set("Results")
+    def save_results(self, df):
+        if df.size == 0:
+            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+        else:
+            file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
+            #df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
+            CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+
+    def display_scenario(self):
+        self.calib.grid_forget()
+        self.scenario.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
+        self.result.grid_forget()
+
+    def display_calibration(self):
+        self.calib.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
+        self.scenario.grid_forget()
+        self.result.grid_forget()
+
+    def display_results(self):
+        self.calib.grid_forget()
+        self.scenario.grid_forget()
+        self.result.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         set_appearance_mode(new_appearance_mode)
@@ -103,32 +131,11 @@ class Menu(CTkFrame):
         set_widget_scaling(new_scaling_float)
 
 
-class Tabs(CTkTabview):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.configure(width=250)
-        self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
-
-        self.df = pd.DataFrame
-        self.end_year = 2022
-        self.create_tabs()
-
-    def create_tabs(self):
-        # create tabview
-        self.add("Calibration")
-        self.add("Scenario")
-        self.add("Results")
-
-        self.calib = CalibrationTab(self.tab('Calibration'))
-        self.scenario = ScenarioTab(self.tab('Scenario'), self.df, self.end_year)
-        self.results = ResultsTab(self.tab('Results'), self.df, self.end_year)
-
-
 class CalibrationTab(CTkScrollableFrame):
     # Calibration frame
     def __init__(self, parent):
         super().__init__(parent)
-        self.place(rely=0, relx=0, relwidth=1, relheight=1)
+        self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
         self.create_widgets()
     
@@ -265,7 +272,7 @@ class ScenarioTab(CTkScrollableFrame):
     # Scenario frame
     def __init__(self, parent, df, end_year):
         super().__init__(parent)
-        self.place(rely=0, relx=0, relwidth=1, relheight=1)
+        self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
         self.df = df
         self.end_year = end_year
@@ -304,7 +311,7 @@ class ScenarioTab(CTkScrollableFrame):
                                            command=lambda: self.csv_scenario_File_dialog())
         self.select_csv_button.place(rely=0.4, relx=0.2)
 
-        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Load File",
+        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Display File",
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
@@ -382,20 +389,29 @@ class ScenarioTab(CTkScrollableFrame):
         run_button.place(relwidth=0.2, relx=0.2, rely=0.2)
 
         # Save results button
-        self.button_save_calib = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
-        self.button_save_calib.place(relwidth=0.2, relx=0.6, rely=0.2)
+        self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
+        self.button_save_results.place(relwidth=0.2, relx=0.6, rely=0.2)
 
     def run(self):
-        run_scenario(self, self.filename)
-        CTkMessagebox(title='OnSSET', message='Scenario run finished!')
-        self.button_save_calib.configure(state='normal')
-        self.df = self.df
-        self.end_year = int(self.end_year.get())
+        try:
+            run_scenario(self, self.filename)
+            CTkMessagebox(title='OnSSET', message='Scenario run finished!')
+            self.button_save_results.configure(state='normal')
+            self.end_year = int(self.end_year.get())
+            self.intermediate_year = int(self.intermediate_year.get())
+            #self.parent.sidebar_frame.sidebar_button_3.configure(state="normal")
+        except AttributeError:
+            CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+        except ValueError:
+            CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
 
-    def save_results(self):
-        file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
-        self.df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
-        CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+    def save_results(self, df):
+        if df.size == 0:
+            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+        else:
+            file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
+            #df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
+            CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
 
     def csv_scenario_File_dialog(self):
         self.filename = filedialog.askopenfilename(title="Select the calibrated csv file with GIS data")
@@ -429,23 +445,121 @@ class ScenarioTab(CTkScrollableFrame):
 
 
 class ResultsTab(CTkTabview):
-    def __init__(self, parent, df, end_year):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.place(rely=0, relx=0, relwidth=1, relheight=1)
+        self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
         self.add('Map')
         self.add('Charts')
 
-        map_frame = CTkFrame(self.tab('Map'))
-        map_frame.pack(fill='both', expand=1)
+        self.map_frame = CTkFrame(self.tab('Map'))
+        self.map_frame.place(relheight=0.9, relwidth=1)
+        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.vis_map(self.map_frame, parent.scenario.df, parent.scenario.end_year))
+        self.load_map_button.place(rely=0.925, relheight=0.05, relwidth=0.2, relx=0.4)
 
-        self.vis_map(map_frame, df, end_year)
+        self.chart_frame = CTkFrame(self.tab('Charts'))
+        self.chart_frame.place(relheight=0.9, relwidth=1)
+        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.intermediate_year, parent.scenario.end_year))
+        self.load_chart_button.place(rely=0.925, relheight=0.05, relwidth=0.2, relx=0.4)
+
+    def vis_charts(self, frame_charts, df, intermediate_year, end_year):
+
+        if df.size == 0:
+            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+        else:
+            yearsofanalysis = [intermediate_year, end_year]
+
+            elements = []
+            for year in yearsofanalysis:
+                elements.append("Population{}".format(year))
+                elements.append("NewConnections{}".format(year))
+                elements.append("Capacity{}".format(year))
+                elements.append("Investment{}".format(year))
+
+            sumtechs = []
+            for year in yearsofanalysis:
+                sumtechs.extend(["Population{}".format(year) + t for t in techs])
+                sumtechs.extend(["NewConnections{}".format(year) + t for t in techs])
+                sumtechs.extend(["Capacity{}".format(year) + t for t in techs])
+                sumtechs.extend(["Investment{}".format(year) + t for t in techs])
+
+            summary = pd.Series(index=sumtechs, name='country')
+
+            for year in yearsofanalysis:
+                for t in techs:
+                    summary.loc["Population{}".format(year) + t] = df.loc[
+                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)), SET_POP + '{}'.format(
+                            year)].sum()
+                    summary.loc["NewConnections{}".format(year) + t] = df.loc[
+                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) &
+                        (df[SET_ELEC_FINAL_CODE + '{}'.format(year)] < 99), SET_NEW_CONNECTIONS + '{}'.format(year)].sum()
+                    summary.loc["Capacity{}".format(year) + t] = df.loc[(df[SET_MIN_OVERALL + '{}'.format
+                    (year)] == t + '{}'.format(year)) &
+                                                                        (df[SET_ELEC_FINAL_CODE + '{}'.format
+                                                                        (year)] < 99), SET_NEW_CAPACITY + '{}'.format
+                                                                        (year)].sum() / 1000
+                    summary.loc["Investment{}".format(year) + t] = df.loc[
+                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) & (
+                                    df[SET_ELEC_FINAL_CODE + '{}'.format
+                                    (year)] < 99), SET_INVESTMENT_COST + '{}'.format(year)].sum()
+
+            index = techs + ['Total']
+            columns = []
+            for year in yearsofanalysis:
+                columns.append("Population{}".format(year))
+                columns.append("NewConnections{}".format(year))
+                columns.append("Capacity{} (MW)".format(year))
+                columns.append("Investment{} (million USD)".format(year))
+
+            summary_table = pd.DataFrame(index=index, columns=columns)
+
+            summary_table[columns[0]] = summary.iloc[0:7].astype(int).tolist() + [int(summary.iloc[0:7].sum())]
+            summary_table[columns[1]] = summary.iloc[7:14].astype(int).tolist() + [int(summary.iloc[7:14].sum())]
+            summary_table[columns[2]] = summary.iloc[14:21].astype(int).tolist() + [int(summary.iloc[14:21].sum())]
+            summary_table[columns[3]] = [round(x / 1e4) / 1e2 for x in summary.iloc[21:28].astype(float).tolist()] + [
+                round(summary.iloc[21:28].sum() / 1e4) / 1e2]
+            summary_table[columns[4]] = summary.iloc[28:35].astype(int).tolist() + [int(summary.iloc[28:35].sum())]
+            summary_table[columns[5]] = summary.iloc[35:42].astype(int).tolist() + [int(summary.iloc[35:42].sum())]
+            summary_table[columns[6]] = summary.iloc[42:49].astype(int).tolist() + [int(summary.iloc[42:49].sum())]
+            summary_table[columns[7]] = [round(x / 1e4) / 1e2 for x in summary.iloc[49:56].astype(float).tolist()] + [
+                round(summary.iloc[49:56].sum() / 1e4) / 1e2]
+
+            techs_colors = dict(zip(techs, colors))
+
+            # figure1 = plt.figure(figsize=(9, 9))
+
+            summary_plot = summary_table.drop(labels='Total', axis=0)
+            fig_size = [7, 7]
+            plt.rcParams["figure.figsize"] = fig_size
+            f, axarr = plt.subplots(2, 2)
+            fig_size = [7, 7]
+            font_size = 5
+            plt.rcParams["figure.figsize"] = fig_size
+
+            sns.barplot(x=summary_plot.index.tolist(), y=columns[4], data=summary_plot, ax=axarr[0, 0], palette=colors)
+            axarr[0, 0].set_ylabel(columns[4], fontsize=2 * font_size)
+            axarr[0, 0].tick_params(labelsize=font_size)
+            sns.barplot(x=summary_plot.index.tolist(), y=columns[5], data=summary_plot, ax=axarr[0, 1], palette=colors)
+            axarr[0, 1].set_ylabel(columns[5], fontsize=2 * font_size)
+            axarr[0, 1].tick_params(labelsize=font_size)
+            sns.barplot(x=summary_plot.index.tolist(), y=columns[6], data=summary_plot, ax=axarr[1, 0], palette=colors)
+            axarr[1, 0].set_ylabel(columns[6], fontsize=2 * font_size)
+            axarr[1, 0].tick_params(labelsize=font_size)
+            sns.barplot(x=summary_plot.index.tolist(), y=columns[7], data=summary_plot, ax=axarr[1, 1], palette=colors)
+            axarr[1, 1].set_ylabel(columns[7], fontsize=2 * font_size)
+            axarr[1, 1].tick_params(labelsize=font_size)
+
+            canvas = FigureCanvasTkAgg(f, master=frame_charts)
+            canvas.get_tk_widget().pack()
+
 
     def vis_map(self, frame_results, df, end_year):
 
-        # filename = filedialog.askopenfilename(title="Open the results file")
-        # df = pd.read_csv(filename)
-        try:
-            figure1 = plt.figure(figsize=(9, 9))
+        map_frame = frame_results
+
+        if df.size == 0:
+            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+        else:
+            figure1 = plt.figure(figsize=(7, 7))
             figure1.add_subplot(111)
             # plt.figure(figsize=(9, 9))
             plt.plot(df.loc[df['FinalElecCode{}'.format(end_year)] == 3, SET_X_DEG],
@@ -483,10 +597,8 @@ class ResultsTab(CTkTabview):
                              df[SET_Y_DEG].max() - df[SET_Y_DEG].min()) + 1)
                 plt.ylim(df[SET_Y_DEG].min() - 1, df[SET_Y_DEG].max() + 1)
 
-            canvas = FigureCanvasTkAgg(figure1, master=frame_results)
+            canvas = FigureCanvasTkAgg(figure1, master=map_frame)
             canvas.get_tk_widget().pack()
-        except:
-            pass
 
 
 if __name__ == "__main__":

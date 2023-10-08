@@ -28,52 +28,56 @@ def calibrate(self):
     CTkMessagebox(title='OnSSET', message='Open the file with extracted GIS data')
     onsseter = load_csv_data()
 
-    start_year = int(self.e1.get())
-    start_year_pop = float(self.e2.get())
-    urban_ratio_start_year = float(self.e3.get())
-    elec_rate = float(self.e4.get())
-    elec_rate_urban = float(self.e5.get())
-    elec_rate_rural = float(self.e6.get())
-    min_night_light = float(self.e14.get())
-    min_pop = float(self.e15.get())
-    max_transformer_dist = float(self.e16.get())
-    max_mv_dist = float(self.e17.get())
-    max_hv_dist = float(self.e18.get())
-    hh_size_urban = float(self.e19.get())
-    hh_size_rural = float(self.e20.get())
+    try:
 
-    # RUN_PARAM: these are the annual household electricity targets
-    tier_1 = 38.7  # 38.7 refers to kWh/household/year. It is the mean value between Tier 1 and Tier 2
-    tier_2 = 219
-    tier_3 = 803
-    tier_4 = 2117
-    tier_5 = 2993
+        start_year = int(self.e1.get())
+        start_year_pop = float(self.e2.get())
+        urban_ratio_start_year = float(self.e3.get())
+        elec_rate = float(self.e4.get())
+        elec_rate_urban = float(self.e5.get())
+        elec_rate_rural = float(self.e6.get())
+        min_night_light = float(self.e14.get())
+        min_pop = float(self.e15.get())
+        max_transformer_dist = float(self.e16.get())
+        max_mv_dist = float(self.e17.get())
+        max_hv_dist = float(self.e18.get())
+        hh_size_urban = float(self.e19.get())
+        hh_size_rural = float(self.e20.get())
 
-    onsseter.prepare_wtf_tier_columns(hh_size_rural, hh_size_urban,
-                                      tier_1, tier_2, tier_3, tier_4, tier_5)
+        # RUN_PARAM: these are the annual household electricity targets
+        tier_1 = 38.7  # 38.7 refers to kWh/household/year. It is the mean value between Tier 1 and Tier 2
+        tier_2 = 219
+        tier_3 = 803
+        tier_4 = 2117
+        tier_5 = 2993
 
-    onsseter.condition_df()
+        onsseter.prepare_wtf_tier_columns(hh_size_rural, hh_size_urban,
+                                          tier_1, tier_2, tier_3, tier_4, tier_5)
 
-    onsseter.df['GridPenalty'] = onsseter.grid_penalties(onsseter.df)
+        onsseter.condition_df()
 
-    onsseter.df['WindCF'] = onsseter.calc_wind_cfs()
+        onsseter.df['GridPenalty'] = onsseter.grid_penalties(onsseter.df)
 
-    onsseter.calibrate_current_pop_and_urban(start_year_pop, urban_ratio_start_year)
+        onsseter.df['WindCF'] = onsseter.calc_wind_cfs()
 
-    elec_modelled, rural_elec_ratio, urban_elec_ratio = \
-        onsseter.elec_current_and_future(elec_rate, elec_rate_urban, elec_rate_rural, start_year,
-                                         min_night_lights=min_night_light,
-                                         min_pop=min_pop,
-                                         max_transformer_dist=max_transformer_dist,
-                                         max_mv_dist=max_mv_dist,
-                                         max_hv_dist=max_hv_dist)
-    self.button_save_calib.configure(state='normal')
-    self.calib_df = onsseter.df
+        onsseter.calibrate_current_pop_and_urban(start_year_pop, urban_ratio_start_year)
 
-    CTkMessagebox(title='OnSSET', message='Calibration completed! The calibrated '
-                                          'electrification rate was {}'.format(round(elec_modelled, 2)))
+        elec_modelled, rural_elec_ratio, urban_elec_ratio = \
+            onsseter.elec_current_and_future(elec_rate, elec_rate_urban, elec_rate_rural, start_year,
+                                             min_night_lights=min_night_light,
+                                             min_pop=min_pop,
+                                             max_transformer_dist=max_transformer_dist,
+                                             max_mv_dist=max_mv_dist,
+                                             max_hv_dist=max_hv_dist)
+        self.button_save_calib.configure(state='normal')
+        self.calib_df = onsseter.df
 
-    return onsseter.df
+        CTkMessagebox(title='OnSSET', message='Calibration completed! The calibrated '
+                                              'electrification rate was {}'.format(round(elec_modelled, 2)))
+
+        return onsseter.df
+    except ValueError:
+        CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
 
 
 def run_scenario(self, calibrated_csv_path):
