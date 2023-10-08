@@ -8,7 +8,7 @@ from tkinter.filedialog import asksaveasfile
 from customtkinter import *
 from PIL import ImageTk
 from CTkMessagebox import CTkMessagebox
-from tkinter import *
+
 
 global df
 global end_year
@@ -141,115 +141,115 @@ class CalibrationTab(CTkScrollableFrame):
     
     def create_widgets(self):
 
-        self.start_year_frame = CTkFrame(self)
+        self.start_year_frame = CTkFrame(self, border_width=5)
         self.start_year_frame.pack(pady=10, padx=40, fill='x')
     
         l1 = CTkLabel(self.start_year_frame, text="Start year")
-        l1.grid(row=0, column=0)
+        l1.grid(row=0, column=0, padx=10, pady=(10, 0))
         self.e1 = CTkEntry(self.start_year_frame)
-        self.e1.grid(row=0, column=1)
+        self.e1.grid(row=0, column=1, padx=10, pady=(10, 0))
         self.e1.insert(10, 2020)
     
         l2 = CTkLabel(self.start_year_frame, text="Start year population")
-        l2.grid(row=1, column=0)
+        l2.grid(row=1, column=0, padx=10)
         self.e2 = CTkEntry(self.start_year_frame)
-        self.e2.grid(row=1, column=1)
+        self.e2.grid(row=1, column=1, padx=10)
         self.e2.insert(10, "")
     
         l3 = CTkLabel(self.start_year_frame, text="Urban ratio (start year)")
-        l3.grid(row=2, column=0)
+        l3.grid(row=2, column=0, padx=10)
         self.e3 = CTkEntry(self.start_year_frame)
-        self.e3.grid(row=2, column=1)
+        self.e3.grid(row=2, column=1, padx=10)
     
         l4 = CTkLabel(self.start_year_frame, text="National electrification rate (start year)")
-        l4.grid(row=3, column=0)
+        l4.grid(row=3, column=0, padx=10)
         self.e4 = CTkEntry(self.start_year_frame)
-        self.e4.grid(row=3, column=1)
+        self.e4.grid(row=3, column=1, padx=10)
     
         l5 = CTkLabel(self.start_year_frame, text="Urban electrification rate (start year)")
-        l5.grid(row=4, column=0)
+        l5.grid(row=4, column=0, padx=10)
         self.e5 = CTkEntry(self.start_year_frame)
-        self.e5.grid(row=4, column=1)
+        self.e5.grid(row=4, column=1, padx=10)
         self.e5.insert(10, "")
     
         l6 = CTkLabel(self.start_year_frame, text="Rural electrification rate (start year)")
-        l6.grid(row=5, column=0)
+        l6.grid(row=5, column=0, padx=10)
         self.e6 = CTkEntry(self.start_year_frame)
-        self.e6.grid(row=5, column=1)
+        self.e6.grid(row=5, column=1, padx=10)
         self.e6.insert(10, "")
     
         l19 = CTkLabel(self.start_year_frame, text="Urban household size")
-        l19.grid(row=6, column=0)
+        l19.grid(row=6, column=0, padx=10)
         self.e19 = CTkEntry(self.start_year_frame)
-        self.e19.grid(row=6, column=1)
+        self.e19.grid(row=6, column=1, padx=10)
         self.e19.insert(10, "5")
     
         l20 = CTkLabel(self.start_year_frame, text="Rural household size")
-        l20.grid(row=7, column=0)
+        l20.grid(row=7, column=0, padx=10)
         self.e20 = CTkEntry(self.start_year_frame)
-        self.e20.grid(row=7, column=1)
+        self.e20.grid(row=7, column=1, padx=10, pady=(0,10))
         self.e20.insert(10, "5")
     
-        self.calib_text_frame = CTkFrame(self)
+        self.calib_text_frame = CTkFrame(self, border_width=5)
         self.calib_text_frame.pack(pady=10, padx=40, fill='x')
     
         l7 = CTkLabel(self.calib_text_frame, text="Calibration of currently electrified settlements")
-        l7.grid(row=0, column=0, sticky='w')
+        l7.grid(row=0, column=0, sticky='w', padx=10, pady=(10,0))
     
         l8 = CTkLabel(self.calib_text_frame,
                       text="The model calibrates which settlements are likely to be electrified in the start year, to match the national statistical values defined above.")
-        l8.grid(row=1, column=0, sticky='w')
+        l8.grid(row=1, column=0, sticky='w', padx=10)
     
         l13 = CTkLabel(self.calib_text_frame,
                        text="A settlement is considered to be electrified if it meets all of the following conditions:")
-        l13.grid(row=2, column=0, sticky='w')
+        l13.grid(row=2, column=0, sticky='w', padx=10)
     
         l9 = CTkLabel(self.calib_text_frame,
                       text="   - Has more night-time lights than the defined threshold (this is set to 0 by default)")
-        l9.grid(row=3, column=0, sticky='w')
+        l9.grid(row=3, column=0, sticky='w', padx=10)
     
         l10 = CTkLabel(self.calib_text_frame,
                        text="   - Is closer to the existing grid network than the distance limit")
-        l10.grid(row=4, column=0, sticky='w')
+        l10.grid(row=4, column=0, sticky='w', padx=10)
     
         l11 = CTkLabel(self.calib_text_frame, text="   - Has more population than the threshold")
-        l11.grid(row=5, column=0, sticky='w')
+        l11.grid(row=5, column=0, sticky='w', padx=10)
     
         l12 = CTkLabel(self.calib_text_frame,
                        text="First, define the threshold limits. Then run the calibration and check if the results seem okay. Else, redefine these thresholds and run again.")
-        l12.grid(row=6, column=0, sticky='w')
+        l12.grid(row=6, column=0, sticky='w', padx=10, pady=(0,10))
     
-        self.calib_values_frame = CTkFrame(self)
+        self.calib_values_frame = CTkFrame(self, border_width=5)
         self.calib_values_frame.pack(pady=10, padx=40, fill='x')
     
         l14 = CTkLabel(self.calib_values_frame, text="Minimum night-time lights")
-        l14.grid(row=0, column=0)
+        l14.grid(row=0, column=0, padx=10, pady=(10,0))
         self.e14 = CTkEntry(self.calib_values_frame)
-        self.e14.grid(row=0, column=1)
+        self.e14.grid(row=0, column=1, padx=10, pady=(10,0))
         self.e14.insert(10, "0")
     
         l15 = CTkLabel(self.calib_values_frame, text="Minimum population")
-        l15.grid(row=1, column=0)
+        l15.grid(row=1, column=0, padx=10)
         self.e15 = CTkEntry(self.calib_values_frame)
-        self.e15.grid(row=1, column=1)
+        self.e15.grid(row=1, column=1, padx=10)
         self.e15.insert(10, "100")
     
         l16 = CTkLabel(self.calib_values_frame, text="Max distance to service transformer")
-        l16.grid(row=2, column=0)
+        l16.grid(row=2, column=0, padx=10)
         self.e16 = CTkEntry(self.calib_values_frame)
-        self.e16.grid(row=2, column=1)
+        self.e16.grid(row=2, column=1, padx=10)
         self.e16.insert(10, "1")
     
         l17 = CTkLabel(self.calib_values_frame, text="Max distance to MV lines")
-        l17.grid(row=3, column=0)
+        l17.grid(row=3, column=0, padx=10)
         self.e17 = CTkEntry(self.calib_values_frame)
-        self.e17.grid(row=3, column=1)
+        self.e17.grid(row=3, column=1, padx=10)
         self.e17.insert(10, "2")
     
         l18 = CTkLabel(self.calib_values_frame, text="Max distance to HV lines")
-        l18.grid(row=4, column=0)
+        l18.grid(row=4, column=0, padx=10)
         self.e18 = CTkEntry(self.calib_values_frame)
-        self.e18.grid(row=4, column=1)
+        self.e18.grid(row=4, column=1, padx=10, pady=(0,10))
         self.e18.insert(10, "25")
     
         self.bottom_frame = CTkFrame(self, height=50)
@@ -282,7 +282,7 @@ class ScenarioTab(CTkScrollableFrame):
         # Frame for TreeView
         treeview_label = CTkLabel(self, text='Calibrated CSV data')
         treeview_label.pack(padx=40, fill='x')
-        frame1 = CTkFrame(self, height=200)
+        frame1 = CTkFrame(self, height=200, border_width=5)
         # Treeview widget
         bg_color = '#7f7f7f'
         text_color = 'black'
@@ -300,11 +300,11 @@ class ScenarioTab(CTkScrollableFrame):
         frame1.pack(pady=(0, 10), padx=40, fill='x')
 
         # Frame for selecting csv file
-        select_csv_frame = CTkFrame(self, height=100)  # , text="Select the calibrated csv file")
+        select_csv_frame = CTkFrame(self, height=100, border_width=5)  # , text="Select the calibrated csv file")
         select_csv_frame.pack(pady=10, padx=40, fill='x')
 
         self.label_file = CTkLabel(select_csv_frame, text="No file selected, click the browse button!")
-        self.label_file.place(rely=0, relx=0)
+        self.label_file.place(rely=0.05, relx=0.05)
 
         # csv file buttons
         self.select_csv_button = CTkButton(select_csv_frame, text="Browse a file",
@@ -319,64 +319,64 @@ class ScenarioTab(CTkScrollableFrame):
         general_param_label = CTkLabel(self, text="Enter general parameters")
         general_param_label.pack(padx=40, fill='x')
 
-        general_frame = CTkFrame(self)  # )
+        general_frame = CTkFrame(self, border_width=5)
         general_frame.pack(pady=(0, 10), padx=40, fill='x')
 
         g_label_1 = CTkLabel(general_frame, text="Start year")
-        g_label_1.grid(row=1, column=0, sticky='w')
+        g_label_1.grid(row=1, column=0, sticky='w', padx=10, pady=(10,0))
         self.start_year = CTkEntry(general_frame)
-        self.start_year.grid(row=1, column=1, sticky='w')
+        self.start_year.grid(row=1, column=1, sticky='w', pady=(10,0))
         self.start_year.insert(10, 2020)
 
         g_label_2 = CTkLabel(general_frame, text="End year")
-        g_label_2.grid(row=2, column=0, sticky='w')
+        g_label_2.grid(row=2, column=0, sticky='w', padx=10)
         self.end_year = CTkEntry(general_frame)
         self.end_year.grid(row=2, column=1, sticky='w')
         self.end_year.insert(10, 2030)
 
         g_label_3 = CTkLabel(general_frame, text="Intermediate year")
-        g_label_3.grid(row=3, column=0, sticky='w')
+        g_label_3.grid(row=3, column=0, sticky='w', padx=10)
         self.intermediate_year = CTkEntry(general_frame)
         self.intermediate_year.grid(row=3, column=1, sticky='w')
         self.intermediate_year.insert(10, 2025)
 
         g_label_4 = CTkLabel(general_frame, text="Electrification rate target")
-        g_label_4.grid(row=4, column=0, sticky='w')
+        g_label_4.grid(row=4, column=0, sticky='w', padx=10)
         self.elec_target = CTkEntry(general_frame)
         self.elec_target.grid(row=4, column=1, sticky='w')
         self.elec_target.insert(10, 1)
 
         g_label_5 = CTkLabel(general_frame, text="Electrification rate target (Intermediate year)")
-        g_label_5.grid(row=5, column=0, sticky='w')
+        g_label_5.grid(row=5, column=0, sticky='w', padx=10)
         self.intermediate_elec_target = CTkEntry(general_frame)
         self.intermediate_elec_target.grid(row=5, column=1, sticky='w')
         self.intermediate_elec_target.insert(10, 0.8)
 
         g_label_6 = CTkLabel(general_frame, text="End year population")
-        g_label_6.grid(row=6, column=0, sticky='w')
+        g_label_6.grid(row=6, column=0, sticky='w', padx=10)
         self.pop_end_year = CTkEntry(general_frame)
         self.pop_end_year.grid(row=6, column=1, sticky='w')
         self.pop_end_year.insert(10, "")
 
         g_label_7 = CTkLabel(general_frame, text="Urban ratio (end year)")
-        g_label_7.grid(row=7, column=0, sticky='w')
+        g_label_7.grid(row=7, column=0, sticky='w', padx=10)
         self.urban_end_year = CTkEntry(general_frame)
         self.urban_end_year.grid(row=7, column=1, sticky='w')
         self.urban_end_year.insert(10, "")
 
         g_label_8 = CTkLabel(general_frame, text="Discount rate")
-        g_label_8.grid(row=8, column=0, sticky='w')
+        g_label_8.grid(row=8, column=0, sticky='w', padx=10)
         self.discount_rate = CTkEntry(general_frame)
         self.discount_rate.grid(row=8, column=1, sticky='w')
         self.discount_rate.insert(10, "0.08")
 
         g_label_9 = CTkLabel(general_frame, text="Urban demand")
-        g_label_9.grid(row=9, column=0, sticky='w')
+        g_label_9.grid(row=9, column=0, sticky='w', padx=10)
         self.urban_tier = CTkOptionMenu(general_frame, values=["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Custom"])
         self.urban_tier.grid(row=9, column=1, sticky='w')
 
         g_label_10 = CTkLabel(general_frame, text="Rural demand")
-        g_label_10.grid(row=10, column=0, sticky='w')
+        g_label_10.grid(row=10, column=0, sticky='w', padx=10, pady=(0,10))
         self.rural_tier = CTkOptionMenu(general_frame, values=["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Custom"])
         self.rural_tier.grid(row=10, column=1, sticky='w')
 
