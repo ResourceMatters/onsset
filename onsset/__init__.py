@@ -3,6 +3,7 @@ The onsset package contains the following modules:
 
  - onsset.py : main functions of the model
  - runner.py : runner is used to calibrate inputs and specify scenario runs
+ - onsset_gis.py : Contains more detailed gis operations
 """
 
 from pkg_resources import get_distribution, DistributionNotFound
