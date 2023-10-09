@@ -27,7 +27,7 @@ class App(CTk):
 
         # configure window
         self.title("OnSSET - The Open Source Spatial Electrification Tool")
-        self.geometry(f"{1100}x{580}")
+        self.geometry(f"{1200}x{580}")
         self.minsize(1100, 580)
         self.iconpath = ImageTk.PhotoImage(file=r'C:\GitHub\ResourceMatters\onsset\resources\onsset_logo_3.png')
         self.wm_iconbitmap()
@@ -252,15 +252,15 @@ class CalibrationTab(CTkScrollableFrame):
         self.e18.grid(row=4, column=1, padx=10, pady=(0,10))
         self.e18.insert(10, "25")
     
-        self.bottom_frame = CTkFrame(self, height=50)
+        self.bottom_frame = CTkFrame(self, height=75, border_width=5)
         self.bottom_frame.pack(fill='x', pady=10, padx=40)
     
         self.button_calib = CTkButton(self.bottom_frame, text="Run calibration", command=lambda: calibrate(self))
-        self.button_calib.place(relwidth=0.2, relx=0.2, rely=0.2)
+        self.button_calib.place(relwidth=0.2, relx=0.2, rely=0.3)
     
         self.button_save_calib = CTkButton(self.bottom_frame, text="Save calibrated file", command=self.save_calibrated,
                                            state='disabled')
-        self.button_save_calib.place(relwidth=0.2, relx=0.6, rely=0.2)
+        self.button_save_calib.place(relwidth=0.2, relx=0.6, rely=0.3)
 
     def save_calibrated(self):
         file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
@@ -381,16 +381,16 @@ class ScenarioTab(CTkScrollableFrame):
         self.rural_tier.grid(row=10, column=1, sticky='w')
 
         # Bottom Frame for running and saving scenario
-        bottom_frame = CTkFrame(self, height=50)
+        bottom_frame = CTkFrame(self, height=75, border_width=5)
         bottom_frame.pack(fill='x', pady=20, padx=40)
 
         # Run scenario button
         run_button = CTkButton(bottom_frame, text="Run scenario", command=lambda: self.run())
-        run_button.place(relwidth=0.2, relx=0.2, rely=0.2)
+        run_button.place(relwidth=0.2, relx=0.2, rely=0.3)
 
         # Save results button
         self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
-        self.button_save_results.place(relwidth=0.2, relx=0.6, rely=0.2)
+        self.button_save_results.place(relwidth=0.2, relx=0.6, rely=0.3)
 
     def run(self):
         try:
