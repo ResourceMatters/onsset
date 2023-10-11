@@ -2,17 +2,16 @@ from tkinter import ttk
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from runner_modern import *  # from onsset.runner_modern import * WHEN running pyinstaller
-from tkinter.filedialog import asksaveasfile
+try:
+    from onsset.runner_modern import * # WHEN running pyinstaller
+except ModuleNotFoundError:
+    from runner_modern import *
 from customtkinter import *
 from PIL import ImageTk
 from CTkMessagebox import CTkMessagebox
 from onsset import *
-import folium
 from tkintermapview import TkinterMapView
-import geopandas as gpd
 import pandas as pd
-import numpy as np
 import contextily as cx
 
 global df
@@ -31,9 +30,9 @@ class App(CTk):
         self.title("OnSSET - The Open Source Spatial Electrification Tool")
         self.geometry(f"{1200}x{580}")
         self.minsize(1100, 580)
-        self.iconpath = ImageTk.PhotoImage(file=r'C:\GitHub\ResourceMatters\onsset\resources\onsset_logo_3.png')
-        self.wm_iconbitmap()
-        self.iconphoto(False, self.iconpath)
+        #self.iconpath = ImageTk.PhotoImage(file='logo.png')
+        #self.wm_iconbitmap()
+        #self.iconphoto(False, self.iconpath)
 
         # configure grid layout (4x4)
         self.grid_columnconfigure(1, weight=1)
@@ -499,9 +498,12 @@ class ResultsTab(CTkTabview):
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
 
             try:
-                cx.add_basemap(plt, source=cx.providers.CartoDB.DarkMatter)
+                cx.add_basemap(plt, crs=4326, source=cx.providers.CartoDB.DarkMatter)
             except:
-                pass
+                try:
+                    cx.add_basemap(plt, source=cx.providers.CartoDB.DarkMatter)
+                except:
+                    pass
 
             canvas = FigureCanvasTkAgg(fig, master=map_frame)
             canvas.draw()
@@ -677,7 +679,8 @@ class ResultsTab(CTkTabview):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
-    app.protocol("WM_DELETE_WINDOW", app.quit)
+    #app.destroy()
+    app.quit()
 
 # # Frame for off-grid technology costs
         # off_grid_frame = CTkFrame(self) #, text="Enter off-grid technology parameters")

@@ -92,11 +92,9 @@ def init_vis_charts(results_tables):
                                   command=lambda: vis_charts(frame_charts))
     button_charts_viz.place(relwidth=0.2, rely=0.95, relx=0.4)
 
-def vis_charts(frame_charts):
-    filename = filedialog.askopenfilename(title="Open the results file")
-    df = pd.read_csv(filename)
+def vis_charts(frame_charts, df, intermediate_year, end_year):
 
-    yearsofanalysis = [2025, 2030]
+    yearsofanalysis = [intermediate_year, end_year]
 
     elements = []
     for year in yearsofanalysis:
