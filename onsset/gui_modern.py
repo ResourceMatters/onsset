@@ -1,4 +1,8 @@
+import threading
+import time
 from tkinter import ttk
+from tkinter.filedialog import asksaveasfile
+
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -13,6 +17,7 @@ from onsset import *
 from tkintermapview import TkinterMapView
 import pandas as pd
 import contextily as cx
+import pyproj
 
 global df
 global end_year
@@ -42,8 +47,13 @@ class App(CTk):
         self.df = pd.DataFrame()
         self.end_year = 2022
 
-        self.calib = CalibrationTab(self)
-        self.scenario = ScenarioTab(self, self.df, self.end_year)
+        self.progressbar = CTkProgressBar(self, height=20, determinate_speed=0.3)
+        self.progressbar.grid(column=1, row=4, padx=20, pady=(0, 20), sticky="nsew")
+        self.progressbar.start()
+        self.progressbar.grid_forget()
+
+        self.calib = CalibrationTab(self, self.progressbar)
+        self.scenario = ScenarioTab(self, self.df, self.end_year, self.progressbar)
         self.result = ResultsTab(self)
 
         self.sidebar_frame = Menu(self, self.calib, self.scenario, self.result)
@@ -101,13 +111,13 @@ class Menu(CTkFrame):
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
-    def save_results(self, df):
-        if df.size == 0:
-            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
-        else:
-            file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
-            #df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
-            CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+    # def save_results(self, df):
+    #     if df.size == 0:
+    #         CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+    #     else:
+    #         file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
+    #         #df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
+    #         CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
 
     def display_scenario(self):
         self.calib.grid_forget()
@@ -134,10 +144,10 @@ class Menu(CTkFrame):
 
 class CalibrationTab(CTkScrollableFrame):
     # Calibration frame
-    def __init__(self, parent):
+    def __init__(self, parent, progressbar):
         super().__init__(parent)
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
-
+        self.progressbar = progressbar
         self.create_widgets()
     
     def create_widgets(self):
@@ -162,7 +172,7 @@ class CalibrationTab(CTkScrollableFrame):
         self.e3 = CTkEntry(self.start_year_frame)
         self.e3.grid(row=2, column=1, padx=10)
     
-        l4 = CTkLabel(self.start_year_frame, text="National electrification rate (start year)")
+        l4 = CTkLabel(self.start_year_frame, text="Total electrification rate (start year)")
         l4.grid(row=3, column=0, padx=10)
         self.e4 = CTkEntry(self.start_year_frame)
         self.e4.grid(row=3, column=1, padx=10)
@@ -256,26 +266,54 @@ class CalibrationTab(CTkScrollableFrame):
         self.bottom_frame = CTkFrame(self, height=75, border_width=5)
         self.bottom_frame.pack(fill='x', pady=10, padx=40)
     
-        self.button_calib = CTkButton(self.bottom_frame, text="Run calibration", command=lambda: calibrate(self))
+        self.button_calib = CTkButton(self.bottom_frame, text="Run calibration", command=lambda: self.run_calibration())
         self.button_calib.place(relx=0.2, rely=0.3)
     
         self.button_save_calib = CTkButton(self.bottom_frame, text="Save calibrated file", command=self.save_calibrated,
                                            state='disabled')
         self.button_save_calib.place(relx=0.6, rely=0.3)
 
+    def run_calibration(self):
+        self.start_progress()
+        try:
+            #calibrate(self) # ToDo add in this file?
+            threading.Thread(target=calibrate, args=(self,), daemon=True).start()
+            #new_thread.start()
+        except:
+            self.stop_progress()
+
+
     def save_calibrated(self):
+        def internal_save_calib():
+            self.calib_df.to_csv(file, index=False)
+            self.stop_progress()
+            CTkMessagebox(title='OnSSET', message='Calibrated file saved successfully!')
+
+        self.start_progress()
         file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
         if file != None:
-            self.calib_df.to_csv(file, index=False)
-            CTkMessagebox(title='OnSSET', message='Calibrated file saved successfully!')
+            threading.Thread(target=internal_save_calib, daemon=True).start()
+        else:
+            self.stop_progress()
+
+    def start_progress(self):
+        self.progressbar.grid(column=1, row=4, padx=20, pady=(0, 20), sticky="nsew")
+        self.button_calib.configure(state='disabled')
+        self.button_save_calib.configure(state='disabled')
+
+    def stop_progress(self):
+        self.progressbar.grid_forget()
+        self.button_calib.configure(state='normal')
+        self.button_calib.configure(state='normal')
 
 
 class ScenarioTab(CTkScrollableFrame):
     # Scenario frame
-    def __init__(self, parent, df, end_year):
+    def __init__(self, parent, df, end_year, progressbar):
         super().__init__(parent)
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
+        self.progressbar = progressbar
         self.df = df
         self.end_year = end_year
         self.create_widgets()
@@ -372,51 +410,73 @@ class ScenarioTab(CTkScrollableFrame):
         self.discount_rate.grid(row=8, column=1, sticky='w')
         self.discount_rate.insert(10, "0.08")
 
-        g_label_9 = CTkLabel(general_frame, text="Urban demand")
+        g_label_9 = CTkLabel(general_frame, text="Urban residential demand")
         g_label_9.grid(row=9, column=0, sticky='w', padx=10)
-        self.urban_tier = CTkOptionMenu(general_frame, values=["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Custom"])
+        self.urban_tier = CTkOptionMenu(general_frame, values=["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
         self.urban_tier.grid(row=9, column=1, sticky='w')
 
-        g_label_10 = CTkLabel(general_frame, text="Rural demand")
-        g_label_10.grid(row=10, column=0, sticky='w', padx=10, pady=(0,10))
-        self.rural_tier = CTkOptionMenu(general_frame, values=["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Custom"])
-        self.rural_tier.grid(row=10, column=1, sticky='w', pady=(0,10))
+        g_label_10 = CTkLabel(general_frame, text="Rural residential demand")
+        g_label_10.grid(row=10, column=0, sticky='w', padx=10)
+        self.rural_tier = CTkOptionMenu(general_frame, values=["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
+        self.rural_tier.grid(row=10, column=1, sticky='w')
+
+        g_label_11 = CTkLabel(general_frame, text="Industrial demand")
+        g_label_11.grid(row=11, column=0, sticky='w', padx=10)
+        self.industrial_demand = CTkOptionMenu(general_frame, values=["Low", "Medium", "High"])
+        self.industrial_demand.grid(row=11, column=1, sticky='w')
+
+        g_label_12 = CTkLabel(general_frame, text="Other demand")
+        g_label_12.grid(row=12, column=0, sticky='w', padx=10, pady=(0, 10))
+        self.other_demand = CTkOptionMenu(general_frame, values=["Low", "Medium", "High"])
+        self.other_demand.grid(row=12, column=1, sticky='w', pady=(0, 10))
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
         bottom_frame.pack(fill='x', pady=20, padx=40)
 
         # Run scenario button
-        run_button = CTkButton(bottom_frame, text="Run scenario", command=lambda: self.run())
-        run_button.place(relx=0.2, rely=0.3)
+        self.run_button = CTkButton(bottom_frame, text="Run scenario", command=lambda: self.run())
+        self.run_button.place(relx=0.2, rely=0.3)
 
         # Save results button
-        self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(self.df), state='disabled')
+        self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
         self.button_save_results.place(relx=0.6, rely=0.3)
 
     def run(self):
+        self.start_progress()
         try:
-            run_scenario(self, self.filename)
-            CTkMessagebox(title='OnSSET', message='Scenario run finished!')
-            self.button_save_results.configure(state='normal')
-            self.end_year = int(self.end_year.get())
-            self.intermediate_year = int(self.intermediate_year.get())
-            #self.parent.sidebar_frame.sidebar_button_3.configure(state="normal")
+            new_thread = threading.Thread(target=run_scenario, args=(self, self.filename), daemon=True)
+            new_thread.start()
         except FileNotFoundError:
             CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+            self.stop_progress()
         except AttributeError:
             CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+            self.stop_progress()
         except ValueError:
             CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
+            self.stop_progress()
+        except:
+            CTkMessagebox(title='OnSSET', message='Something went wrong check the error file (TO BE ADDED)', icon='warning')
+            self.stop_progress()
 
-    def save_results(self, df):
-        if df.size == 0:
-            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
-        else:
+    def save_results(self):
+        def save_results_internal():
             file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
             if file != None:
-                df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
+                self.start_progress()
+                self.dispaly_csv_button.configure(state='disabled')
+                self.df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
                 CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+                self.dispaly_csv_button.configure(state='normal')
+            else:
+                CTkMessagebox(title='OnSSET', message='No results saved')
+            self.stop_progress()
+
+        if self.df.size == 0:
+            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+        else:
+            threading.Thread(target=save_results_internal, args=(), daemon=True).start()
 
     def csv_scenario_File_dialog(self):
         self.filename = filedialog.askopenfilename(title="Select the calibrated csv file with GIS data")
@@ -424,29 +484,52 @@ class ScenarioTab(CTkScrollableFrame):
         return None
 
     def load_scenario_csv_data(self):
-        try:
+
+        def internal_display_scenario():
             csv_filename = r"{}".format(self.filename)
             df = pd.read_csv(csv_filename)
             self.label_file.configure(text=self.filename + " opened!")
+            self.clear_data()
+            self.tv1["column"] = list(df.columns)
+            self.tv1["show"] = "headings"
+            for column in self.tv1["columns"]:
+                self.tv1.heading(column, text=column)
+            df_rows = df.to_numpy().tolist()
+            for row in df_rows:
+                self.tv1.insert("", "end", values=row)
+
+        self.start_progress()
+        prev_state = self.button_save_results.cget('state')
+        self.button_save_results.configure(state='disabled')
+        try:
+            internal_display_scenario()
+            #threading.Thread(target=internal_display_scenario, daemon=True).start()
         except ValueError:
             CTkMessagebox(title='Error', message="Could not load file", icon="warning")
-            return None
         except FileNotFoundError:
             CTkMessagebox(title='Error', message=f"Could not find the file {self.filename}", icon="warning")
-            return None
+        except AttributeError:
+            CTkMessagebox(title='Error', message="No CSV file selected", icon="warning")
 
-        self.clear_data()
-        self.tv1["column"] = list(df.columns)
-        self.tv1["show"] = "headings"
-        for column in self.tv1["columns"]:
-            self.tv1.heading(column, text=column)
+        self.stop_progress()
+        if prev_state == 'normal':
+            self.button_save_results.configure(state='normal')
 
-        df_rows = df.to_numpy().tolist()
-        for row in df_rows:
-            self.tv1.insert("", "end", values=row)
 
     def clear_data(self):
         self.tv1.delete(*self.tv1.get_children())
+
+    def start_progress(self):
+        self.progressbar.grid(column=1, row=4, padx=20, pady=(0, 20), sticky="nsew")
+        self.button_save_results.configure(state='disabled')
+        self.run_button.configure(state='disabled')
+        self.dispaly_csv_button.configure(state='disabled')
+
+    def stop_progress(self):
+        self.progressbar.grid_forget()
+        self.run_button.configure(state='normal')
+        self.dispaly_csv_button.configure(state='normal')
+
 
 
 class ResultsTab(CTkTabview):
@@ -460,21 +543,50 @@ class ResultsTab(CTkTabview):
 
         self.map_frame = CTkFrame(self.tab('Map'))
         self.map_frame.place(relheight=0.9, relwidth=1)
-        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.end_year))
+        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.end_year.get()))
         #self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, self.df, 2030))
-        self.load_map_button.place(rely=0.925, relheight=0.05, relwidth=0.2, relx=0.4)
+        self.load_map_button.place(rely=0.925, relwidth=0.2, relx=0.5)
+        self.background = CTkOptionMenu(self.tab('Map'), values=["OpenStreetMap", "Light", "Dark", "Colorful"])
+        self.background.place(rely=0.925, relwidth=0.2, relx=0.25)
+        self.background_label = CTkLabel(self.tab('Map'), text='Background map:')
+        self.background_label.place(rely=0.925, relwidth=0.1, relx=0.13)
 
         self.chart_frame = CTkFrame(self.tab('Charts'))
         self.chart_frame.place(relheight=0.9, relwidth=1)
-        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.intermediate_year, parent.scenario.end_year))
+        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.intermediate_year.get(), parent.scenario.end_year.get()))
         #self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts',command=lambda: self.vis_charts(self.chart_frame, self.df, 2025, 2030))
-        self.load_chart_button.place(rely=0.925, relheight=0.05, relwidth=0.2, relx=0.4)
+        self.load_chart_button.place(rely=0.925, relwidth=0.2, relx=0.4)
+
 
     def scatter_plot(self, map_frame, df, end_year):
 
         if df.size == 0:
             CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
         else:
+            if self.background.get() == "Colorful":
+                background = cx.providers.CartoDB.Voyager
+            elif self.background.get() == "Dark":
+                background = cx.providers.CartoDB.DarkMatter
+            elif self.background.get() == "OpenStreetMap":
+                background = cx.providers.OpenStreetMap.Mapnik
+            else:
+                background = cx.providers.CartoDB.Positron
+
+            # Define the EPSG:4326 and EPSG:3857 CRS
+            crs_4326 = pyproj.CRS('EPSG:4326')
+            crs_3857 = pyproj.CRS('EPSG:3857')
+
+            # Create a transformer to convert coordinates
+            transformer = pyproj.Transformer.from_crs(crs_4326, crs_3857, always_xy=True)
+
+            # Apply the transformation and create new columns
+            # Vectorized transformation using NumPy
+            lon_lat = df[[SET_X_DEG, SET_Y_DEG]].to_numpy()
+            x_3857, y_3857 = transformer.transform(lon_lat[:, 0], lon_lat[:, 1])
+
+            # Add the new columns to the DataFrame
+            df['x_3857'] = x_3857
+            df['y_3857'] = y_3857
 
             fig, ax = plt.subplots()
             fig.set_facecolor("#7f7f7f")
@@ -489,64 +601,48 @@ class ResultsTab(CTkTabview):
                       1: '#4e53de'}
 
             for key in colors.keys():
-                ax.scatter(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'X_deg'],
-                            df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'Y_deg'], color=colors[key],
+                ax.scatter(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'x_3857'],
+                            df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'y_3857'], color=colors[key],
                             marker='o',
-                            s=(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'Pop2030'] / 100000))
+                            s=(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'Pop2030'] / 100000 * 2))
 
             ax.axis('off')
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
 
             try:
-                cx.add_basemap(plt, crs=4326, source=cx.providers.CartoDB.DarkMatter)
+                cx.add_basemap(plt, source=background)
             except:
-                try:
-                    cx.add_basemap(plt, source=cx.providers.CartoDB.DarkMatter)
-                except:
-                    pass
+                pass
 
             canvas = FigureCanvasTkAgg(fig, master=map_frame)
             canvas.draw()
             canvas.get_tk_widget().place(relx=0, relwidth=1, relheight=0.9)
-            toolbar = NavigationToolbar2Tk(canvas, map_frame)
-            toolbar.update()
 
-            self.legend_frame = CTkFrame(map_frame, border_width=5, width=20, height=100)
+            self.legend_frame = CTkFrame(map_frame, border_width=5, width=20, height=100, fg_color='#222021')
             self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-            # self.legend_frame.pack(padx=10, side='right')
-            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14), text_color='#4e53de')
+            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
             self.label_1.grid(row=0, column=0, padx=30, pady=10)
-            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14), text_color='#ffc700')
+            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'),
+                                    text_color='#ffc700')
             self.label_3.grid(row=1, column=0, padx=30, pady=10)
-            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14), text_color='#e628a0')
+            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
             self.label_5.grid(row=2, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14), text_color='#1b8f4d')
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'),
+                                    text_color='#1b8f4d')
             self.label_6.grid(row=3, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14), text_color='#28e66d')
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'),
+                                    text_color='#28e66d')
             self.label_6.grid(row=4, column=0, padx=30, pady=10)
-            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14), text_color='#808080')
+            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'),
+                                     text_color='#808080')
             self.label_99.grid(row=5, column=0, padx=30, pady=10)
 
-    def custom_tkinter_map(self, map_frame, df, intermediate_year, end_year, pop_threshold=100):
-        map_widget = TkinterMapView(map_frame, width=800, height=600, corner_radius=0)
-        map_widget.pack(expand=1, fill='both')
-        #map_widget.fit_bounding_box((5.14, 12.22), (-13.4, 31.2))
-        map_widget.fit_bounding_box((df[SET_Y_DEG].max(), df[SET_X_DEG].min()), (df[SET_Y_DEG].min(), df[SET_X_DEG].max()))
-
-        colors = {1: '#4e53de',
-                  3: '#ffc700',
-                  5: '#e628a0',
-                  6: '#1b8f4d',
-                  7: '#28e66d',
-                  99: '#808080'}
-
-        results_df = df.loc[df[SET_POP_CALIB] > pop_threshold]
-
-        for idx, row in results_df.iterrows():
-            map_widget.set_polygon([(row[SET_Y_DEG], row[SET_X_DEG])],
-                                   border_width=(row[SET_POP + f'{end_year}']/1000000),
-                                   fill_color=colors[row[SET_ELEC_FINAL_CODE + f'{end_year}']],
-                                   outline_color=colors[row[SET_ELEC_FINAL_CODE + f'{end_year}']])
+            try:
+                self.toolbar.destroy()
+            except AttributeError:
+                pass
+            self.toolbar = NavigationToolbar2Tk(canvas, map_frame)
+            self.toolbar.place(rely=0.9, relheight=0.1, relwidth=1)
 
     def vis_charts(self, frame_charts, df, intermediate_year, end_year):
 
@@ -657,29 +753,32 @@ class ResultsTab(CTkTabview):
             canvas = FigureCanvasTkAgg(f, master=frame_charts)
             canvas.draw()
             canvas.get_tk_widget().place(relx=0.5, rely=0, relheight=0.9, relwidth=0.8, anchor=N)
-            toolbar = NavigationToolbar2Tk(canvas, frame_charts)
-            toolbar.update()
+            try:
+                self.toolbar_2.destroy()
+            except AttributeError:
+                pass
+            self.toolbar_2 = NavigationToolbar2Tk(canvas, frame_charts)
+            self.toolbar_2.update()
 
-            self.legend_frame = CTkFrame(frame_charts, border_width=5, width=20, height=100)
+            self.legend_frame = CTkFrame(frame_charts, border_width=5, width=20, height=100, fg_color='#222021')
             self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14), text_color='#4e53de')
+            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
             self.label_1.grid(row=0, column=0, padx=30, pady=10)
-            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14), text_color='#ffc700')
+            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
             self.label_3.grid(row=1, column=0, padx=30, pady=10)
-            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14), text_color='#e628a0')
+            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
             self.label_5.grid(row=2, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14), text_color='#1b8f4d')
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
             self.label_6.grid(row=3, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14), text_color='#28e66d')
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
             self.label_6.grid(row=4, column=0, padx=30, pady=10)
-            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14), text_color='#808080')
-            self.label_99.grid(row=5, column=0, padx=30, pady=10)
+            # self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
+            # self.label_99.grid(row=5, column=0, padx=30, pady=10)
 
 
 if __name__ == "__main__":
     app = App()
     app.mainloop()
-    #app.destroy()
     app.quit()
 
 # # Frame for off-grid technology costs

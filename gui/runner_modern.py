@@ -1,6 +1,6 @@
 from CTkMessagebox import CTkMessagebox
 from onsset.onsset import *
-import onsset.onsset_gis as onsset_gis
+#import onsset.onsset_gis as onsset_gis
 from customtkinter import filedialog
 
 
@@ -339,8 +339,8 @@ def run_scenario(self, calibrated_csv_path):
 
     onsseter.project_pop_and_urban(pop_future, urban_future, start_year, end_year, intermediate_year)
 
-    if gis_grid_extension:
-        onsseter.df = onsset_gis.create_geodataframe(onsseter.df)
+    # if gis_grid_extension:
+    #     onsseter.df = onsset_gis.create_geodataframe(onsseter.df)
 
     for year in yearsofanalysis:
         eleclimit = eleclimits[year]
