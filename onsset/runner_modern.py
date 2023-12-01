@@ -11,25 +11,29 @@ def csv_File_dialog():
 
 def load_csv_data():
     file_path = csv_File_dialog()
-    try:
-        csv_filename = r"{}".format(file_path)
-        onsseter = SettlementProcessor(csv_filename)
-        return onsseter
-    except ValueError:
-        CTkMessagebox(title='Error', message="Could not load file", icon="warning")
-        return None
-    except FileNotFoundError:
-        CTkMessagebox(title='Error', message=f"Could not find the file {file_path}", icon="warning")
-        return None
 
+    if file_path[-3:] == 'csv':
+        try:
+            csv_filename = r"{}".format(file_path)
+            onsseter = SettlementProcessor(csv_filename)
+            return onsseter
+        except ValueError:
+            CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+            return None
+        except FileNotFoundError:
+            CTkMessagebox(title='Error', message=f"Could not find the file {file_path}", icon="warning")
+            return None
+    else:
+        CTkMessagebox(title='Error', message=f"Only csv files can be used", icon="warning")
+        return None
 
 def calibrate(self):
     #global calib_df
-    CTkMessagebox(title='OnSSET', message='Open the file with extracted GIS data')
-    onsseter = load_csv_data()
+    CTkMessagebox(title='OnSSET', message='Open the CSV file with extracted GIS data')
+
 
     try:
-
+        onsseter = load_csv_data()
         start_year = int(self.e1.get())
         start_year_pop = float(self.e2.get())
         urban_ratio_start_year = float(self.e3.get())
@@ -86,9 +90,9 @@ def calibrate(self):
         return onsseter.df
     except ValueError:
         CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
-    except:
-        CTkMessagebox(title='OnSSET', message='Oops... something went wrong, check the error log (TO BE ADDED)', icon='error')
-    self.stop_progress()
+    # except Exception as e:
+    #     CTkMessagebox(title='OnSSET', message='Oops... something went wrong, check the error log (TO BE ADDED)', icon='warning')
+    # self.stop_progress()
 
 
 def run_scenario(self, calibrated_csv_path):

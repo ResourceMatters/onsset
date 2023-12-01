@@ -1,5 +1,6 @@
 import threading
 import time
+import traceback
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfile
 
@@ -9,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 try:
     from onsset.runner_modern import * # WHEN running pyinstaller
 except ModuleNotFoundError:
-    from runner_modern import *
+    from runner_modern import run_scenario
 from customtkinter import *
 from PIL import ImageTk
 from CTkMessagebox import CTkMessagebox
@@ -273,15 +274,129 @@ class CalibrationTab(CTkScrollableFrame):
                                            state='disabled')
         self.button_save_calib.place(relx=0.6, rely=0.3)
 
+    def csv_File_dialog(self):
+        filename = filedialog.askopenfilename(title="Select the csv file with GIS data")
+        return filename
+
+    def load_csv_data(self):
+        file_path = self.csv_File_dialog()
+
+        if file_path[-3:] == 'csv':
+            try:
+                csv_filename = r"{}".format(file_path)
+                onsseter = SettlementProcessor(csv_filename)
+                return onsseter
+            except ValueError:
+                CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+                return None
+            except FileNotFoundError:
+                CTkMessagebox(title='Error', message=f"Could not find the file {file_path}", icon="warning")
+                return None
+        else:
+            CTkMessagebox(title='Error', message=f"Only csv files can be used", icon="warning")
+            return None
+
+    def calibrate(self):
+        # global calib_df
+        CTkMessagebox(title='OnSSET', message='Open the CSV file with extracted GIS data')
+
+        try:
+            onsseter = self.load_csv_data()
+            start_year = int(self.e1.get())
+            start_year_pop = float(self.e2.get())
+            urban_ratio_start_year = float(self.e3.get())
+            elec_rate = float(self.e4.get())
+            elec_rate_urban = float(self.e5.get())
+            elec_rate_rural = float(self.e6.get())
+            min_night_light = float(self.e14.get())
+            min_pop = float(self.e15.get())
+            max_transformer_dist = float(self.e16.get())
+            max_mv_dist = float(self.e17.get())
+            max_hv_dist = float(self.e18.get())
+            hh_size_urban = float(self.e19.get())
+            hh_size_rural = float(self.e20.get())
+
+            # RUN_PARAM: these are the annual household electricity targets
+            tier_1 = 38.7  # 38.7 refers to kWh/household/year. It is the mean value between Tier 1 and Tier 2
+            tier_2 = 219
+            tier_3 = 803
+            tier_4 = 2117
+            tier_5 = 2993
+
+            onsseter.prepare_wtf_tier_columns(hh_size_rural, hh_size_urban,
+                                              tier_1, tier_2, tier_3, tier_4, tier_5)
+
+            onsseter.condition_df()
+
+            onsseter.df['GridPenalty'] = onsseter.grid_penalties(onsseter.df)
+
+            onsseter.df['WindCF'] = onsseter.calc_wind_cfs()
+
+            onsseter.calibrate_current_pop_and_urban(start_year_pop, urban_ratio_start_year)
+
+            elec_modelled, rural_elec_ratio, urban_elec_ratio = \
+                onsseter.elec_current_and_future(elec_rate, elec_rate_urban, elec_rate_rural, start_year,
+                                                 min_night_lights=min_night_light,
+                                                 min_pop=min_pop,
+                                                 max_transformer_dist=max_transformer_dist,
+                                                 max_mv_dist=max_mv_dist,
+                                                 max_hv_dist=max_hv_dist)
+            self.button_save_calib.configure(state='normal')
+            self.calib_df = onsseter.df
+
+            urban_pop = onsseter.df.loc[onsseter.df[SET_URBAN] == 2, SET_POP_CALIB].sum()
+            total_pop = onsseter.df[SET_POP_CALIB].sum()
+            urban_pop_ratio = urban_pop / total_pop
+
+            CTkMessagebox(title='OnSSET', width=600,
+                          message='Calibration completed! \n'
+                                  f'The calibrated total electrification rate was {round(elec_modelled, 2)} \n'
+                                  f'The calibrated urban electrification rate was {round(urban_elec_ratio, 2)} \n'
+                                  f'The calibrated rural electrification rate was {round(rural_elec_ratio, 2)} \n'
+                                  f'The calibrated urban ratio was {round(urban_pop_ratio, 2)} \n')
+            self.stop_progress()
+            return onsseter.df
+        except ValueError:
+            CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
+        except Exception as e:
+            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                option_2='Display error message', icon='warning')
+
+            if msg.get() == 'Display error message':
+                self.error_popup(e)
+        self.stop_progress()
+
+    def error_popup(self, error):
+        def save_error(error):
+            path = asksaveasfile(filetypes=[("txt file", ".txt")], defaultextension=".txt")
+
+            # with open(path.name, "w") as f:
+            #     traceback.TracebackException.from_exception(error).print(file=f)
+
+            with open(path.name, 'a') as f:
+                f.write(str(error))
+                f.write(traceback.format_exc())
+
+        popup = CTkToplevel()
+        popup.geometry('200x200')
+        popup.title('Error message')
+
+        error_frame = CTkTextbox(popup, wrap='none')
+        error_frame.insert("0.0", traceback.format_exc())
+        error_frame.place(relwidth=1, relheight=1)
+
+        save_button = CTkButton(popup, text='Save error message', command=lambda: save_error(error))
+        save_button.place(relx=0.5, rely=0.9, anchor='s')
+
     def run_calibration(self):
         self.start_progress()
         try:
             #calibrate(self) # ToDo add in this file?
-            threading.Thread(target=calibrate, args=(self,), daemon=True).start()
+            threading.Thread(target=self.calibrate, daemon=True).start()
             #new_thread.start()
-        except:
-            self.stop_progress()
+        except Exception as e:
 
+            self.stop_progress()
 
     def save_calibrated(self):
         def internal_save_calib():
@@ -780,6 +895,9 @@ if __name__ == "__main__":
     app = App()
     app.mainloop()
     app.quit()
+
+
+
 
 # # Frame for off-grid technology costs
         # off_grid_frame = CTkFrame(self) #, text="Enter off-grid technology parameters")
