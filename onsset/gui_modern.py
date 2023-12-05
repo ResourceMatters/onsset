@@ -378,8 +378,9 @@ class CalibrationTab(CTkScrollableFrame):
                 f.write(traceback.format_exc())
 
         popup = CTkToplevel()
-        popup.geometry('200x200')
+        popup.geometry('400x400')
         popup.title('Error message')
+        popup.attributes('-topmost', 'true')
 
         error_frame = CTkTextbox(popup, wrap='none')
         error_frame.insert("0.0", traceback.format_exc())
@@ -391,11 +392,8 @@ class CalibrationTab(CTkScrollableFrame):
     def run_calibration(self):
         self.start_progress()
         try:
-            #calibrate(self) # ToDo add in this file?
             threading.Thread(target=self.calibrate, daemon=True).start()
-            #new_thread.start()
         except Exception as e:
-
             self.stop_progress()
 
     def save_calibrated(self):
@@ -470,80 +468,63 @@ class ScenarioTab(CTkScrollableFrame):
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
-        # Frame for general parameters
-        general_param_label = CTkLabel(self, text="Enter general parameters")
-        general_param_label.pack(padx=40, fill='x')
+        def create_entry_boxes(frame_label, info_dict, output_dict):
+            # Frame for south grid parameters
+            frame_label = CTkLabel(self, text=frame_label)
+            frame_label.pack(padx=40, fill='x')
 
-        general_frame = CTkFrame(self, border_width=5)
-        general_frame.pack(pady=(0, 10), padx=40, fill='x')
+            frame = CTkFrame(self, border_width=5)
+            frame.pack(pady=(0, 10), padx=40, fill='x')
 
-        g_label_1 = CTkLabel(general_frame, text="Start year")
-        g_label_1.grid(row=1, column=0, sticky='w', padx=10, pady=(10,0))
-        self.start_year = CTkEntry(general_frame)
-        self.start_year.grid(row=1, column=1, sticky='w', pady=(10,0))
-        self.start_year.insert(10, 2020)
+            i = 0
+            for key in list(info_dict):
+                if i == 0:
+                    y = (10, 0)
+                elif i == len(info_dict) - 1:
+                    y = (0, 10)
+                else:
+                    y = (0, 0)
+                info = info_dict[key]
+                label = CTkLabel(frame, text=info[0])
+                label.grid(row=i, column=0, sticky='w', padx=10, pady=y)
+                if type(info[1]) == list:
+                    entry = CTkOptionMenu(frame, values=info[1])
+                else:
+                    entry = CTkEntry(frame)
+                    entry.insert(10, str(info[1]))
+                entry.grid(row=i, column=1, sticky='w', pady=y)
+                output_dict[key] = entry
+                i += 1
 
-        g_label_2 = CTkLabel(general_frame, text="End year")
-        g_label_2.grid(row=2, column=0, sticky='w', padx=10)
-        self.end_year = CTkEntry(general_frame)
-        self.end_year.grid(row=2, column=1, sticky='w')
-        self.end_year.insert(10, 2030)
+        # Define and create general parameters
+        general_dict = {
+            'start_year': ("Start year", 2020),
+            'end_year': ("End year", 2030),
+            'intermediate_year': ('Intermediate year', 2025),
+            'elec_target': ('Electrification rate target', 1),
+            'intermediate_elec_target': ('Electrification rate target (Intermediate year)', 0.75),
+            'end_year_pop': ('End year population', ""),
+            'end_year_urban': ("Urban ratio (end year)", ""),
+            'discount_rate': ('Discount rate', 0.08),
+            'urban_tier': ("Urban residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+            'rural_tier': ("Rural residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+            'industrial_demand': ('Industrial demand', ["Low", "Medium", "High"]),
+            'other_demand': ('Other demand', ["Low", "Medium", "High"])
+        }
 
-        g_label_3 = CTkLabel(general_frame, text="Intermediate year")
-        g_label_3.grid(row=3, column=0, sticky='w', padx=10)
-        self.intermediate_year = CTkEntry(general_frame)
-        self.intermediate_year.grid(row=3, column=1, sticky='w')
-        self.intermediate_year.insert(10, 2025)
+        self.general_inputs = {}
 
-        g_label_4 = CTkLabel(general_frame, text="Electrification rate target")
-        g_label_4.grid(row=4, column=0, sticky='w', padx=10)
-        self.elec_target = CTkEntry(general_frame)
-        self.elec_target.grid(row=4, column=1, sticky='w')
-        self.elec_target.insert(10, 1)
+        create_entry_boxes("Enter general parameters", general_dict, self.general_inputs)
 
-        g_label_5 = CTkLabel(general_frame, text="Electrification rate target (Intermediate year)")
-        g_label_5.grid(row=5, column=0, sticky='w', padx=10)
-        self.intermediate_elec_target = CTkEntry(general_frame)
-        self.intermediate_elec_target.grid(row=5, column=1, sticky='w')
-        self.intermediate_elec_target.insert(10, 0.8)
+        # Define and create south grid parameters
+        south_grid_dict = {'grid_generation_cost': ('Grid generation cost', 0.05),
+                           'grid_losses': ('Grid T&D losses', 0.05),
+                           'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000),
+                           }
 
-        g_label_6 = CTkLabel(general_frame, text="End year population")
-        g_label_6.grid(row=6, column=0, sticky='w', padx=10)
-        self.pop_end_year = CTkEntry(general_frame)
-        self.pop_end_year.grid(row=6, column=1, sticky='w')
-        self.pop_end_year.insert(10, "")
+        self.south_grid_inputs = {}
 
-        g_label_7 = CTkLabel(general_frame, text="Urban ratio (end year)")
-        g_label_7.grid(row=7, column=0, sticky='w', padx=10)
-        self.urban_end_year = CTkEntry(general_frame)
-        self.urban_end_year.grid(row=7, column=1, sticky='w')
-        self.urban_end_year.insert(10, "")
-
-        g_label_8 = CTkLabel(general_frame, text="Discount rate")
-        g_label_8.grid(row=8, column=0, sticky='w', padx=10)
-        self.discount_rate = CTkEntry(general_frame)
-        self.discount_rate.grid(row=8, column=1, sticky='w')
-        self.discount_rate.insert(10, "0.08")
-
-        g_label_9 = CTkLabel(general_frame, text="Urban residential demand")
-        g_label_9.grid(row=9, column=0, sticky='w', padx=10)
-        self.urban_tier = CTkOptionMenu(general_frame, values=["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-        self.urban_tier.grid(row=9, column=1, sticky='w')
-
-        g_label_10 = CTkLabel(general_frame, text="Rural residential demand")
-        g_label_10.grid(row=10, column=0, sticky='w', padx=10)
-        self.rural_tier = CTkOptionMenu(general_frame, values=["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-        self.rural_tier.grid(row=10, column=1, sticky='w')
-
-        g_label_11 = CTkLabel(general_frame, text="Industrial demand")
-        g_label_11.grid(row=11, column=0, sticky='w', padx=10)
-        self.industrial_demand = CTkOptionMenu(general_frame, values=["Low", "Medium", "High"])
-        self.industrial_demand.grid(row=11, column=1, sticky='w')
-
-        g_label_12 = CTkLabel(general_frame, text="Other demand")
-        g_label_12.grid(row=12, column=0, sticky='w', padx=10, pady=(0, 10))
-        self.other_demand = CTkOptionMenu(general_frame, values=["Low", "Medium", "High"])
-        self.other_demand.grid(row=12, column=1, sticky='w', pady=(0, 10))
+        create_entry_boxes('Enter parameters for the south grid', south_grid_dict, self.south_grid_inputs)
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
@@ -569,8 +550,9 @@ class ScenarioTab(CTkScrollableFrame):
                 f.write(traceback.format_exc())
 
         popup = CTkToplevel()
-        popup.geometry('200x200')
+        popup.geometry('400x400')
         popup.title('Error message')
+        popup.attributes('-topmost', 'true')
 
         error_frame = CTkTextbox(popup, wrap='none')
         error_frame.insert("0.0", traceback.format_exc())
@@ -602,18 +584,18 @@ class ScenarioTab(CTkScrollableFrame):
             settlements_in_csv = self.filename
             onsseter = SettlementProcessor(settlements_in_csv)
 
-            rural_tier_text = self.rural_tier.get()
-            urban_tier_text = self.urban_tier.get()
-            start_year = int(self.start_year.get())
-            intermediate_year = int(self.intermediate_year.get())
-            end_year = int(self.end_year.get())
-            intermediate_electrification_target = float(self.intermediate_elec_target.get())
-            end_year_electrification_rate_target = float(self.elec_target.get())
-            disc_rate = float(self.discount_rate.get())
-            pop_future = float(self.pop_end_year.get())
-            urban_future = float(self.urban_end_year.get())
-            industrial_demand_text = self.industrial_demand.get()
-            other_demand_text = self.industrial_demand.get()
+            rural_tier_text = self.general_inputs['rural_tier'].get()
+            urban_tier_text = self.general_inputs['urban_tier'].get()
+            start_year = int(self.general_inputs['start_year'].get())
+            intermediate_year = int(self.general_inputs['intermediate_year'].get())
+            end_year = int(self.general_inputs['end_year'].get())
+            intermediate_electrification_target = float(self.general_inputs['intermediate_elec_target'].get())
+            end_year_electrification_rate_target = float(self.general_inputs['elec_target'].get())
+            disc_rate = float(self.general_inputs['discount_rate'].get())
+            pop_future = float(self.general_inputs['end_year_pop'].get())
+            urban_future = float(self.general_inputs['end_year_urban'].get())
+            industrial_demand_text = self.general_inputs['industrial_demand'].get()
+            other_demand_text = self.general_inputs['other_demand'].get()
 
             tier_dict = {'Tier 1': 1,
                          'Tier 2': 2,
@@ -661,10 +643,6 @@ class ScenarioTab(CTkScrollableFrame):
                                                      end_year: 999999999}
             annual_grid_cap_gen_limit_sud = {intermediate_year: 999999999,
                                              end_year: 999999999}
-
-            grid_generation_cost_sud = 0.07
-            grid_power_plants_capital_cost_sud = 2000
-            grid_losses_sud = 0.08
 
             # East grid specifications
             auto_intensification_est = 0
@@ -728,13 +706,13 @@ class ScenarioTab(CTkScrollableFrame):
                                          grid_price=grid_generation_cost_ouest)
 
             grid_calc_sud = Technology(om_of_td_lines=0.1,
-                                       distribution_losses=grid_losses_sud,
+                                       distribution_losses=float(self.south_grid_inputs['grid_losses'].get()),
                                        connection_cost_per_hh=150,
                                        base_to_peak_load_ratio=0.8,
                                        capacity_factor=1,
                                        tech_life=30,
-                                       grid_capacity_investment=grid_power_plants_capital_cost_sud,
-                                       grid_price=grid_generation_cost_sud)
+                                       grid_capacity_investment=float(self.south_grid_inputs['grid_capacity_investment_cost'].get()),
+                                       grid_price=float(self.south_grid_inputs['grid_generation_cost'].get()))
 
             grid_calc_est = Technology(om_of_td_lines=0.1,
                                        distribution_losses=grid_losses_est,
@@ -1081,7 +1059,7 @@ class ResultsTab(CTkTabview):
 
         self.map_frame = CTkFrame(self.tab('Map'))
         self.map_frame.place(relheight=0.9, relwidth=1)
-        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.end_year.get()))
+        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.general_inputs['end_year'].get()))
         #self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, self.df, 2030))
         self.load_map_button.place(rely=0.925, relwidth=0.2, relx=0.5)
         self.background = CTkOptionMenu(self.tab('Map'), values=["OpenStreetMap", "Light", "Dark", "Colorful"])
@@ -1091,10 +1069,9 @@ class ResultsTab(CTkTabview):
 
         self.chart_frame = CTkFrame(self.tab('Charts'))
         self.chart_frame.place(relheight=0.9, relwidth=1)
-        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.intermediate_year.get(), parent.scenario.end_year.get()))
+        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.general_inputs['intermediate_year'].get(), parent.scenario.general_inputs['end_year'].get()))
         #self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts',command=lambda: self.vis_charts(self.chart_frame, self.df, 2025, 2030))
         self.load_chart_button.place(rely=0.925, relwidth=0.2, relx=0.4)
-
 
     def scatter_plot(self, map_frame, df, end_year):
 
