@@ -378,7 +378,7 @@ class CalibrationTab(CTkScrollableFrame):
                 f.write(traceback.format_exc())
 
         popup = CTkToplevel()
-        popup.geometry('400x400')
+        popup.geometry('600x300')
         popup.title('Error message')
         popup.attributes('-topmost', 'true')
 
@@ -424,6 +424,12 @@ class ScenarioTab(CTkScrollableFrame):
     # Scenario frame
     def __init__(self, parent, df, end_year, progressbar):
         super().__init__(parent)
+        self.mg_inputs = None
+        self.standalone_inputs = None
+        self.south_grid_inputs = None
+        self.general_inputs = None
+        self.east_grid_inputs = None
+        self.west_grid_inputs = None
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
         self.progressbar = progressbar
@@ -494,18 +500,27 @@ class ScenarioTab(CTkScrollableFrame):
                     entry.insert(10, str(info[1]))
                 entry.grid(row=i, column=1, sticky='w', pady=y)
                 output_dict[key] = entry
+
+                try:
+                    description = CTkLabel(frame, text=info[2])
+                    description.grid(row=i, column=2, sticky='w', padx=10, pady=y)
+                except:
+                    pass
+
                 i += 1
 
         # Define and create general parameters
         general_dict = {
-            'start_year': ("Start year", 2020),
-            'end_year': ("End year", 2030),
+            'start_year': ("Start year", 2020, 'Write the start year of the analysis'), 
+            'end_year': ("End year", 2030, 'Write the end year of the analysis'),
             'intermediate_year': ('Intermediate year', 2025),
-            'elec_target': ('Electrification rate target', 1),
-            'intermediate_elec_target': ('Electrification rate target (Intermediate year)', 0.75),
-            'end_year_pop': ('End year population', ""),
-            'end_year_urban': ("Urban ratio (end year)", ""),
-            'discount_rate': ('Discount rate', 0.08),
+            'elec_target': ('Electrification rate target', 1, 'E.g. 1 for 100% electrification rate or 0.80 for 80% electrification rate'),
+            'intermediate_elec_target': ('Electrification rate target (Intermediate year)', 0.75, 'E.g. for a target electrification rate of 75%, enter 0.75'),
+            'end_year_pop': ('End year population', "", 'Write the population in the end year of the analysis (e.g. 2030)'),
+            'end_year_urban': ("Urban ratio (end year)", "", 'Write the urban population population ratio in the end year (e.g. 2030)'),
+            'hh_size_urban': ('Urban household size', 5, 'Write the number of people per household in urban areas'),
+            'hh_size_rural': ('Rural household size', 5, 'Write the number of people per household in rural areas'),
+            'discount_rate': ('Discount rate', 0.08, 'Write the discount rate'),
             'urban_tier': ("Urban residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
             'rural_tier': ("Rural residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
             'industrial_demand': ('Industrial demand', ["Low", "Medium", "High"]),
@@ -517,14 +532,69 @@ class ScenarioTab(CTkScrollableFrame):
         create_entry_boxes("Enter general parameters", general_dict, self.general_inputs)
 
         # Define and create south grid parameters
-        south_grid_dict = {'grid_generation_cost': ('Grid generation cost', 0.05),
-                           'grid_losses': ('Grid T&D losses', 0.05),
-                           'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000),
+        south_grid_dict = {
+            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
+            'grid_losses': (
+            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
+            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
+            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
+            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)')
                            }
 
         self.south_grid_inputs = {}
 
         create_entry_boxes('Enter parameters for the south grid', south_grid_dict, self.south_grid_inputs)
+
+        # Define and create east grid parameters
+        east_grid_dict = {
+            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
+            'grid_losses': (
+            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
+            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
+            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
+            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)')
+                           }
+
+        self.east_grid_inputs = {}
+
+        create_entry_boxes('Enter parameters for the east grid', east_grid_dict, self.east_grid_inputs)
+
+        # Define and create west grid parameters
+        west_grid_dict = {
+            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
+            'grid_losses': (
+            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
+            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
+            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
+            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
+            'intensification_dist': ('Intensification', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
+                           }
+
+        self.west_grid_inputs = {}
+
+        create_entry_boxes('Enter parameters for the west grid', west_grid_dict, self.west_grid_inputs)
+
+        standalone_dict = {
+            'sa_cost_1': ('Investment cost (1-20 W)', 9620, 'Stand-alone PV capital cost (USD/kW) for household systems under 20 W'),
+            'sa_cost_2': ('Investment cost (21-50 W)', 8780, 'Stand-alone PV capital cost (USD/kW) for household systems between 21-50 W'),
+            'sa_cost_3': ('Investment cost (51-100 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 51-100 W'),
+            'sa_cost_4': ('Investment cost (101-1000 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 101-1000 W'),
+            'sa_cost_5': ('Investment cost (>1 kW)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems over 1 kW')
+        }
+
+        self.standalone_inputs = {}
+
+        create_entry_boxes('Enter parameters for stand-alone PV', standalone_dict, self.standalone_inputs)
+
+        mini_grids_dict = {
+            'mg_pv_capital_cost': ('PV mini-grid investment cost', 2950, 'PV mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
+            'mg_wind_capital_cost': ('Wind mini-grid investment cost', 3750, 'Wind mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
+            'mg_hydro_capital_cost': ('Hydro mini-grid investment cost', 3000, 'Hydro mini-grid  capital cost (USD/kW) as expected in the years of the analysis')
+        }
+
+        self.mg_inputs = {}
+
+        create_entry_boxes('Enter parameters for renewable mini-grids', mini_grids_dict, self.mg_inputs)
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
@@ -538,6 +608,49 @@ class ScenarioTab(CTkScrollableFrame):
         self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
         self.button_save_results.place(relx=0.6, rely=0.3)
 
+    def retrieve_inputs(self):
+
+        self.start_year = int(self.general_inputs['start_year'].get())
+        self.intermediate_year = int(self.general_inputs['intermediate_year'].get())
+        self.end_year = int(self.general_inputs['end_year'].get())
+        self.intermediate_electrification_target = float(self.general_inputs['intermediate_elec_target'].get())
+        self.end_year_electrification_rate_target = float(self.general_inputs['elec_target'].get())
+        self.disc_rate = float(self.general_inputs['discount_rate'].get())
+        self.pop_future = float(self.general_inputs['end_year_pop'].get())
+        self.urban_future = float(self.general_inputs['end_year_urban'].get())
+        self.urban_hh_size = float(self.general_inputs['hh_size_urban'].get())
+        self.rural_hh_size = float(self.general_inputs['hh_size_rural'].get())
+
+        self.grid_losses_ouest = float(self.west_grid_inputs['grid_losses'].get())
+        self.grid_power_plants_capital_cost_ouest = float(self.west_grid_inputs['grid_capacity_investment_cost'].get())
+        self.grid_generation_cost_ouest = float(self.west_grid_inputs['grid_generation_cost'].get())
+        self.annual_new_grid_connections_limit_ouest = float(self.west_grid_inputs['max_connections'].get())
+        self.annual_grid_cap_gen_limit_ouest = float(self.west_grid_inputs['max_capacity'].get())
+        self.auto_intensification_ouest = float(self.west_grid_inputs['intensification_dist'].get())
+
+        rural_tier_text = self.general_inputs['rural_tier'].get()
+        urban_tier_text = self.general_inputs['urban_tier'].get()
+        industrial_demand_text = self.general_inputs['industrial_demand'].get()
+        other_demand_text = self.general_inputs['other_demand'].get()
+
+        tier_dict = {'Tier 1': 1,
+                     'Tier 2': 2,
+                     'Tier 3': 3,
+                     'Tier 4': 4,
+                     'Tier 5': 5,
+                     'Low': 6,
+                     'Medium': 7,
+                     'High': 8}
+
+        other_demand_dict = {'Low': 0,
+                             'Medium': 1,
+                             'High': 2}
+
+        self.rural_tier = tier_dict[rural_tier_text]
+        self.urban_tier = tier_dict[urban_tier_text]
+        self.industrial_demand = other_demand_dict[industrial_demand_text]
+        self.social_productive_demand = other_demand_dict[other_demand_text]
+
     def error_popup(self, error):
         def save_error(error):
             path = asksaveasfile(filetypes=[("txt file", ".txt")], defaultextension=".txt")
@@ -550,7 +663,7 @@ class ScenarioTab(CTkScrollableFrame):
                 f.write(traceback.format_exc())
 
         popup = CTkToplevel()
-        popup.geometry('400x400')
+        popup.geometry('600x300')
         popup.title('Error message')
         popup.attributes('-topmost', 'true')
 
@@ -563,7 +676,9 @@ class ScenarioTab(CTkScrollableFrame):
 
     def run(self):
         self.start_progress()
+
         try:
+            self.retrieve_inputs()
             new_thread = threading.Thread(target=self.run_scenario, daemon=True)
             new_thread.start()
         except FileNotFoundError:
@@ -584,106 +699,63 @@ class ScenarioTab(CTkScrollableFrame):
             settlements_in_csv = self.filename
             onsseter = SettlementProcessor(settlements_in_csv)
 
-            rural_tier_text = self.general_inputs['rural_tier'].get()
-            urban_tier_text = self.general_inputs['urban_tier'].get()
-            start_year = int(self.general_inputs['start_year'].get())
-            intermediate_year = int(self.general_inputs['intermediate_year'].get())
-            end_year = int(self.general_inputs['end_year'].get())
-            intermediate_electrification_target = float(self.general_inputs['intermediate_elec_target'].get())
-            end_year_electrification_rate_target = float(self.general_inputs['elec_target'].get())
-            disc_rate = float(self.general_inputs['discount_rate'].get())
-            pop_future = float(self.general_inputs['end_year_pop'].get())
-            urban_future = float(self.general_inputs['end_year_urban'].get())
-            industrial_demand_text = self.general_inputs['industrial_demand'].get()
-            other_demand_text = self.general_inputs['other_demand'].get()
-
-            tier_dict = {'Tier 1': 1,
-                         'Tier 2': 2,
-                         'Tier 3': 3,
-                         'Tier 4': 4,
-                         'Tier 5': 5,
-                         'Low': 6,
-                         'Medium': 7,
-                         'High': 8}
-
-            other_demand_dict = {'Low': 0,
-                                 'Medium': 1,
-                                 'High': 2}
-
-            rural_tier = tier_dict[rural_tier_text]
-            urban_tier = tier_dict[urban_tier_text]
-            industrial_demand = other_demand_dict[industrial_demand_text]
-            social_productive_demand = other_demand_dict[other_demand_text]
-
             onsseter.df['HealthDemand'] = 0
             onsseter.df['EducationDemand'] = 0
             onsseter.df['AgriDemand'] = 0
             onsseter.df['CommercialDemand'] = 0
             onsseter.df['HeavyIndustryDemand'] = 0
 
+            start_year = self.start_year
+            intermediate_year = self.intermediate_year
+            end_year = self.end_year
+
             # ToDo
             gis_grid_extension = False
-            num_people_per_hh_rural = 5
-            num_people_per_hh_urban = 5
             max_grid_extension_dist = 50
-            # West grid specifications
-            auto_intensification_ouest = 0
-            annual_new_grid_connections_limit_ouest = {intermediate_year: 999999999,
-                                                       end_year: 999999999}
-            annual_grid_cap_gen_limit_ouest = {intermediate_year: 999999999,
-                                               end_year: 999999999}
-
-            grid_generation_cost_ouest = 0.07
-            grid_power_plants_capital_cost_ouest = 2000
-            grid_losses_ouest = 0.08
 
             # South grid specifications
             auto_intensification_sud = 0
-            annual_new_grid_connections_limit_sud = {intermediate_year: 999999999,
-                                                     end_year: 999999999}
-            annual_grid_cap_gen_limit_sud = {intermediate_year: 999999999,
-                                             end_year: 999999999}
+            annual_new_grid_connections_limit_sud = 999999999
+            annual_grid_cap_gen_limit_sud = 999999999
 
             # East grid specifications
             auto_intensification_est = 0
-            annual_new_grid_connections_limit_est = {intermediate_year: 999999999,
-                                                     end_year: 999999999}
-            annual_grid_cap_gen_limit_est = {intermediate_year: 999999999,
-                                             end_year: 999999999}
+            annual_new_grid_connections_limit_est = 999999999
+            annual_grid_cap_gen_limit_est = 999999999
             grid_generation_cost_est = 0.07
             grid_power_plants_capital_cost_est = 2000
             grid_losses_est = 0.08
 
             # Here the scenario run starts
 
-            if social_productive_demand == 1:
+            if self.social_productive_demand == 1:
                 onsseter.df['HealthDemand'] = onsseter.df['health_dem_low']
                 onsseter.df['EducationDemand'] = onsseter.df['edu_dem_low']
                 onsseter.df['AgriDemand'] = onsseter.df['agri_dem_low']
                 onsseter.df['CommercialDemand'] = onsseter.df['prod_dem_low']
-            elif social_productive_demand == 2:
+            elif self.social_productive_demand == 2:
                 onsseter.df['HealthDemand'] = onsseter.df['health_dem_mid']
                 onsseter.df['EducationDemand'] = onsseter.df['edu_dem_mid']
                 onsseter.df['AgriDemand'] = onsseter.df['agri_dem_mid']
                 onsseter.df['CommercialDemand'] = onsseter.df['prod_dem_mid']
-            elif social_productive_demand == 3:
+            elif self.social_productive_demand == 3:
                 onsseter.df['HealthDemand'] = onsseter.df['health_dem_high']
                 onsseter.df['EducationDemand'] = onsseter.df['edu_dem_high']
                 onsseter.df['AgriDemand'] = onsseter.df['agri_dem_high']
                 onsseter.df['CommercialDemand'] = onsseter.df['prod_dem_high']
 
-            if industrial_demand == 1:
+            if self.industrial_demand == 1:
                 onsseter.df['HeavyIndustryDemand'] = onsseter.df['ind_dem_low']
-            elif industrial_demand == 2:
+            elif self.industrial_demand == 2:
                 onsseter.df['HeavyIndustryDemand'] = onsseter.df['ind_dem_mid']
-            elif industrial_demand == 3:
+            elif self.industrial_demand == 3:
                 onsseter.df['HeavyIndustryDemand'] = onsseter.df['ind_dem_high']
 
-            if rural_tier == 6:
+            if self.rural_tier == 6:
                 onsseter.df['ResidentialDemandTierCustom'] = onsseter.df['hh_dem_low']
-            elif rural_tier == 7:
+            elif self.rural_tier == 7:
                 onsseter.df['ResidentialDemandTierCustom'] = onsseter.df['hh_dem_mid']
-            elif rural_tier == 8:
+            elif self.rural_tier == 8:
                 onsseter.df['ResidentialDemandTierCustom'] = onsseter.df['hh_dem_high']
 
             onsseter.df.drop(['hh_dem_low', 'hh_dem_mid', 'hh_dem_high', 'health_dem_low', 'health_dem_mid',
@@ -694,16 +766,16 @@ class ScenarioTab(CTkScrollableFrame):
             Technology.set_default_values(base_year=start_year,
                                           start_year=start_year,
                                           end_year=end_year,
-                                          discount_rate=disc_rate)
+                                          discount_rate=self.disc_rate)
 
             grid_calc_ouest = Technology(om_of_td_lines=0.1,
-                                         distribution_losses=grid_losses_ouest,
+                                         distribution_losses=self.grid_losses_ouest,
                                          connection_cost_per_hh=150,
                                          base_to_peak_load_ratio=0.8,
                                          capacity_factor=1,
                                          tech_life=30,
-                                         grid_capacity_investment=grid_power_plants_capital_cost_ouest,
-                                         grid_price=grid_generation_cost_ouest)
+                                         grid_capacity_investment=self.grid_power_plants_capital_cost_ouest,
+                                         grid_price=self.grid_generation_cost_ouest)
 
             grid_calc_sud = Technology(om_of_td_lines=0.1,
                                        distribution_losses=float(self.south_grid_inputs['grid_losses'].get()),
@@ -791,15 +863,15 @@ class ScenarioTab(CTkScrollableFrame):
 
             annual_new_grid_connections_limit = {'Est': annual_new_grid_connections_limit_est,
                                                  'Sud': annual_new_grid_connections_limit_sud,
-                                                 'Ouest': annual_new_grid_connections_limit_ouest}
+                                                 'Ouest': self.annual_new_grid_connections_limit_ouest}
 
             annual_grid_cap_gen_limit = {'Est': annual_grid_cap_gen_limit_est,
                                          'Sud': annual_grid_cap_gen_limit_sud,
-                                         'Ouest': annual_grid_cap_gen_limit_ouest}
+                                         'Ouest': self.annual_grid_cap_gen_limit_ouest}
 
             grids = ['Est', 'Ouest', 'Sud']
             grid_calcs = [grid_calc_est, grid_calc_ouest, grid_calc_sud]
-            auto_intensifications = [auto_intensification_est, auto_intensification_ouest, auto_intensification_sud]
+            auto_intensifications = [auto_intensification_est, self.auto_intensification_ouest, auto_intensification_sud]
 
             onsseter.df.loc[onsseter.df['Region'] == 'Haut-Katanga', 'ClosestGrid'] = 'Sud'
             onsseter.df.loc[onsseter.df['Region'] == 'Haut-Lomami', 'ClosestGrid'] = 'Sud'
@@ -835,13 +907,13 @@ class ScenarioTab(CTkScrollableFrame):
             # RUN_PARAM: One shall define here the years of analysis (excluding start year),
             # together with access targets per interval and timestep duration
             yearsofanalysis = [intermediate_year, end_year]
-            eleclimits = {intermediate_year: intermediate_electrification_target,
-                          end_year: end_year_electrification_rate_target}
+            eleclimits = {intermediate_year: self.intermediate_electrification_target,
+                          end_year: self.end_year_electrification_rate_target}
             time_steps = {intermediate_year: intermediate_year - start_year, end_year: end_year - intermediate_year}
 
             onsseter.current_mv_line_dist()
 
-            onsseter.project_pop_and_urban(pop_future, urban_future, start_year, end_year, intermediate_year)
+            onsseter.project_pop_and_urban(self.pop_future, self.urban_future, start_year, end_year, intermediate_year)
 
             # if gis_grid_extension:
             #     onsseter.df = onsset_gis.create_geodataframe(onsseter.df)
@@ -850,8 +922,8 @@ class ScenarioTab(CTkScrollableFrame):
                 eleclimit = eleclimits[year]
                 time_step = time_steps[year]
 
-                onsseter.set_scenario_variables(year, num_people_per_hh_rural, num_people_per_hh_urban, time_step,
-                                                start_year, urban_tier, rural_tier, 1)
+                onsseter.set_scenario_variables(year, self.rural_hh_size, self.urban_hh_size, time_step,
+                                                start_year, self.urban_tier, self.rural_tier, 1)
 
                 onsseter.diesel_cost_columns(sa_diesel_cost, mg_diesel_cost, year)
 
@@ -869,12 +941,12 @@ class ScenarioTab(CTkScrollableFrame):
                     print('')
                     onsseter.df['extension_distance_' + '{}'.format(year)] = 99
 
-                    onsseter.pre_screening(eleclimit, year, time_step, prioritization, auto_intensification_ouest,
+                    onsseter.pre_screening(eleclimit, year, time_step, prioritization, self.auto_intensification_ouest,
                                            auto_intensification_sud, auto_intensification_est)
 
                 for grid, grid_calc, auto_intensification in zip(grids, grid_calcs, auto_intensifications):
-                    grid_cap_gen_limit = time_step * annual_grid_cap_gen_limit[grid][year] * 1000
-                    grid_connect_limit = time_step * annual_new_grid_connections_limit[grid][year] * 1000
+                    grid_cap_gen_limit = time_step * annual_grid_cap_gen_limit[grid] * 1000
+                    grid_connect_limit = time_step * annual_new_grid_connections_limit[grid] * 1000
 
                     grid_investment, grid_cap_gen_limit, grid_connect_limit = \
                         onsseter.pre_electrification(grid_calc.grid_price, year, time_step, end_year, grid_calc,
@@ -926,7 +998,7 @@ class ScenarioTab(CTkScrollableFrame):
                 if gis_grid_extension:
                     grid_investment = grid_investment_combined
 
-                onsseter.results_columns(year, time_step, prioritization, auto_intensification_ouest,
+                onsseter.results_columns(year, time_step, prioritization, self.auto_intensification_ouest,
                                          auto_intensification_sud, auto_intensification_est)
 
                 grid_investment = pd.DataFrame(grid_investment)
@@ -939,7 +1011,7 @@ class ScenarioTab(CTkScrollableFrame):
                     print('')
                     onsseter.apply_limitations_gis(year, time_step)
                 else:
-                    onsseter.apply_limitations(eleclimit, year, time_step, prioritization, auto_intensification_ouest,
+                    onsseter.apply_limitations(eleclimit, year, time_step, prioritization, self.auto_intensification_ouest,
                                                auto_intensification_sud, auto_intensification_est)
 
                 onsseter.calculate_new_capacity(mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
