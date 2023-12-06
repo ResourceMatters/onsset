@@ -1,5 +1,4 @@
 import threading
-import time
 import traceback
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfile
@@ -7,15 +6,9 @@ from tkinter.filedialog import asksaveasfile
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-# try:
-#     from onsset.runner_modern import * # WHEN running pyinstaller
-# except ModuleNotFoundError:
-#     from runner_modern import run_scenario
 from customtkinter import *
-from PIL import ImageTk
 from CTkMessagebox import CTkMessagebox
 from onsset import *
-from tkintermapview import TkinterMapView
 import pandas as pd
 import contextily as cx
 import pyproj
@@ -25,6 +18,7 @@ global end_year
 
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
 
 class CollapsibleFrame(CTkFrame):
     def __init__(self, master=None, collapsed=True, header_text="", *args, **kwargs):
@@ -200,11 +194,11 @@ class About(CTkScrollableFrame):
         about_text_frame = CTkFrame(self, border_width=5)
         about_text_frame.pack(pady=10, padx=40, fill='x')
 
-        text = CTkTextbox(about_text_frame, fg_color="transparent", height=600)
-        text.pack(padx=10, pady=10, fill='x')
+        text = CTkTextbox(about_text_frame, fg_color="transparent", height=497)
+        text.pack(padx=10, pady=5, fill='x')
         text.insert("0.0",
                     "About\n\n"
-                    "This interface is used to run geospatial electrification analysis for the DRC using the Open" 
+                    "This interface is used to run electrification analysis for the DRC using the Open " 
                     "Source Spatial Electrification Tool (OnSSET) in a simple manner.\n" 
                     "The interface is built on the freely available and open-source OnSSET code version available at "
                     "https://github.com/ResourceMatters/onsset/tree/gui\n\n"
@@ -213,8 +207,8 @@ class About(CTkScrollableFrame):
                     "The interface has four separate sections, briefly explained below.\n\n"
                     
                     "Calibration\n"
-                    "In this section, the user calibrates the data in the csv-file to match national statistics with"
-                    "regards to population, urban share of population, and currently electrified settlements.\n\n"
+                    "In this section, the user calibrates the data in the csv-file to match national statistics for the start of the analysis.\n"
+                    "This includes total population, urban share of population, and currently electrified settlements.\n\n"
                     
                     "Scenario\n"
                     "In this section, the user uses the calibrated file to run least-cost electrification investment scenarios.\n"
@@ -228,13 +222,13 @@ class About(CTkScrollableFrame):
                     
                     "Additional information\n"
                     " * Note that all inputs in the interface use a dot ( . ) for decimals, not a comma ( , )\n"
-                    " * In case something goes wrong, an error message is displayed, which can also be saved. This can be useful in case you need to contact someone for support.\n"
+                    " * In case something goes wrong, an error message is displayed, which can also be saved in case you need to contact someone for support.\n"
                     " * For more information about the Congo Epela project, see https://congoepela.resourcematters.org/\n"
                     " * For more information about OnSSET and support, see:\n"
                     "     * The OnSSET documentation: https://onsset.readthedocs.io/\n"
                     "     * The OnSSET website: https://www.onsset.org/\n"
                     "     * The OnSSET forum: https://groups.google.com/g/onsset\n"
-                    "     * The freely available online course on OnSSET and geospatial electrification modelling: https://www.open.edu/openlearncreate/course/view.php?id=11533"
+                    "     * The freely available online course on OnSSET: https://www.open.edu/openlearncreate/course/view.php?id=11533"
                     )
 
 
@@ -782,9 +776,9 @@ class ScenarioTab(CTkScrollableFrame):
         except FileNotFoundError:
             CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
             self.stop_progress()
-        except AttributeError:
-            CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
-            self.stop_progress()
+        # except AttributeError:
+        #     CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+        #     self.stop_progress()
         # except ValueError:
         #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
         #     self.stop_progress()
@@ -1132,9 +1126,9 @@ class ScenarioTab(CTkScrollableFrame):
         except FileNotFoundError:
             CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
             self.stop_progress()
-        except AttributeError:
-            CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
-            self.stop_progress()
+        # except AttributeError:
+        #     CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+        #     self.stop_progress()
         # except ValueError:
         #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
         #     self.stop_progress()
@@ -1200,7 +1194,6 @@ class ScenarioTab(CTkScrollableFrame):
         self.stop_progress()
         if prev_state == 'normal':
             self.button_save_results.configure(state='normal')
-
 
     def clear_data(self):
         self.tv1.delete(*self.tv1.get_children())
