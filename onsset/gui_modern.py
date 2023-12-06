@@ -132,8 +132,8 @@ class Menu(CTkFrame):
         self.sidebar_button_3 = CTkButton(self, text='Visualize results', command=self.display_results)
         self.sidebar_button_3.grid(row=4, column=0, padx=20, pady=10)
 
-        self.sidebar_button_4 = CTkButton(self, text='Additional inputs')
-        self.sidebar_button_4.grid(row=5, column=0, padx=20, pady=10)
+        # self.sidebar_button_4 = CTkButton(self, text='Additional inputs')
+        # self.sidebar_button_4.grid(row=5, column=0, padx=20, pady=10)
 
         self.appearance_mode_label = CTkLabel(self, text="Appearance Mode", anchor="w")
         self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
@@ -621,21 +621,21 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.general_inputs = {}
 
-        create_entry_boxes("Enter general parameters", general_dict, self.general_inputs, collapsed=False)
+        create_entry_boxes("General parameters", general_dict, self.general_inputs, collapsed=False)
 
         # Define and create south grid parameters
         south_grid_dict = {
             'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
-            'grid_losses': (
-            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
+            'grid_losses': ('Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
             'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
             'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
-            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)')
+            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
+            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
                            }
 
         self.south_grid_inputs = {}
 
-        create_entry_boxes('Enter parameters for the south grid', south_grid_dict, self.south_grid_inputs)
+        create_entry_boxes('Parameters for the south grid', south_grid_dict, self.south_grid_inputs)
 
         # Define and create east grid parameters
         east_grid_dict = {
@@ -644,12 +644,13 @@ class ScenarioTab(CTkScrollableFrame):
             'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
             'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
             'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
-            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)')
+            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
+            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
                            }
 
         self.east_grid_inputs = {}
 
-        create_entry_boxes('Enter parameters for the east grid', east_grid_dict, self.east_grid_inputs)
+        create_entry_boxes('Parameters for the east grid', east_grid_dict, self.east_grid_inputs)
 
         # Define and create west grid parameters
         west_grid_dict = {
@@ -659,34 +660,77 @@ class ScenarioTab(CTkScrollableFrame):
             'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
             'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
             'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
-            'intensification_dist': ('Intensification', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
+            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
                            }
 
         self.west_grid_inputs = {}
 
-        create_entry_boxes('Enter parameters for the west grid', west_grid_dict, self.west_grid_inputs)
+        create_entry_boxes('Parameters for the west grid', west_grid_dict, self.west_grid_inputs)
 
         standalone_dict = {
             'sa_cost_1': ('Investment cost (1-20 W)', 9620, 'Stand-alone PV capital cost (USD/kW) for household systems under 20 W'),
             'sa_cost_2': ('Investment cost (21-50 W)', 8780, 'Stand-alone PV capital cost (USD/kW) for household systems between 21-50 W'),
             'sa_cost_3': ('Investment cost (51-100 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 51-100 W'),
             'sa_cost_4': ('Investment cost (101-1000 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 101-1000 W'),
-            'sa_cost_5': ('Investment cost (>1 kW)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems over 1 kW')
+            'sa_cost_5': ('Investment cost (>1 kW)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems over 1 kW'),
+            'sa_pv_tech_life': ('Stand-alone PV technology life-time', 25, 'Expected techno-economic lifetime of stand-alone PV systems (years)'),
+            'sa_pv_om': ('Stand-alone PV O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)')
         }
 
         self.standalone_inputs = {}
 
-        create_entry_boxes('Enter parameters for stand-alone PV', standalone_dict, self.standalone_inputs)
+        create_entry_boxes('Parameters for stand-alone PV', standalone_dict, self.standalone_inputs)
 
         mini_grids_dict = {
             'mg_pv_capital_cost': ('PV mini-grid investment cost', 2950, 'PV mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
+            'mg_pv_tech_life': ('PV mini-grid technology life-time', 20, 'Expected techno-economic lifetime of PV mini-grids (years'),
+            'mg_pv_om': ('PV mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
             'mg_wind_capital_cost': ('Wind mini-grid investment cost', 3750, 'Wind mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
-            'mg_hydro_capital_cost': ('Hydro mini-grid investment cost', 3000, 'Hydro mini-grid  capital cost (USD/kW) as expected in the years of the analysis')
+            'mg_wind_tech_life': ('Wind mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Wind mini-grids (years'),
+            'mg_wind_om': ('Wind mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
+            'mg_hydro_capital_cost': ('Hydro mini-grid investment cost', 3000, 'Hydro mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
+            'mg_hydro_tech_life': ('Hydro mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Hydro mini-grids (years'),
+            'mg_hydro_om': ('Hydro mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
         }
 
         self.mg_inputs = {}
 
-        create_entry_boxes('Enter parameters for renewable mini-grids', mini_grids_dict, self.mg_inputs)
+        create_entry_boxes('Parameters for renewable mini-grids', mini_grids_dict, self.mg_inputs)
+
+        diesel_techs_dict = {
+            'diesel_technologies': ('Include diesel technologies?', ['No', 'Yes'], 'Decide whether to include diesel mini-grids and diesel stand-alone technologies as potential off-grid technologies for new connections'),
+            'diesel_fuel': ('Diesel pump price', 1.0, 'USD/liter of diesel fuel (in cities)'),
+            'mg_diesel_capital_cost': ('Diesel mini-grid capital cost', 672, 'Diesel mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
+            'mg_diesel_tech_life': ('Diesel mini-grid technology life-time', 15, 'Expected techno-economic lifetime of diesel mini-grids (years'),
+            'mg_diesel_om': ('Diesel mini-grid O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
+            'sa_diesel_capital_cost': ('Diesel stand-alone capital cost', 814, 'Diesel stand-alone capital cost (USD/kW) as expected in the years of the analysis'),
+            'sa_diesel_tech_life': ('Diesel stand-alone technology life-time', 10, 'Expected techno-economic lifetime of diesel stand-alone (years'),
+            'sa_diesel_om': ('Diesel stand-alone O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        }
+
+        self.diesel_inputs = {}
+
+        create_entry_boxes('Parameters for off-grid diesel technologies', diesel_techs_dict, self.diesel_inputs)
+
+        td_dict = {
+            'hv_line_cost': ('HV line cost', 53000, 'USD/km'),
+            'hv_line_voltage': ('HV line voltage', 69, 'kV'),
+            'mv_line_cost': ('MV line cost', 15000, 'USD/km'),
+            'mv_line_voltage': ('MV line voltage', 33, 'kV'),
+            'max_mv_line_dist': ('Max MV line dist', 50, 'The maximum length of an MV line (km)'),
+            'lv_line_cost': ('LV line cost', 7000, 'USD/km'),
+            'lv_line_voltage': ('LV line voltage', 0.24, 'kV'),
+            'max_lv_line_dist': ('Max MV line dist', 0.5, 'The maximum length of an LV line (km)'),
+            'dist_transformer_type': ('Distribution transformer capacity', 50, 'kVA'),
+            'dist_transformer_cost': ('Distribution transformer cost', 4250, 'USD/unit'),
+            'mg_distribution_losses': ('Mini-grid distribution losses', 0.05, 'Losses in mini-grid distribution networks'),
+            'mg_hh_connection_cost': ('Mini-grid household connection cost', 100, 'Household connection cost (USD/household) to mini-grid distribution networks'),
+            'grid_hh_connection_cost': ('Grid household connection cost', 150, 'Household connection cost (USD/household) to centralized grid distribution networks')
+        }
+
+        self.td_inputs = {}
+
+        create_entry_boxes('Parameters for transmission and distribution network components', td_dict, self.td_inputs)
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
@@ -719,6 +763,62 @@ class ScenarioTab(CTkScrollableFrame):
         self.annual_new_grid_connections_limit_ouest = float(self.west_grid_inputs['max_connections'].get())
         self.annual_grid_cap_gen_limit_ouest = float(self.west_grid_inputs['max_capacity'].get())
         self.auto_intensification_ouest = float(self.west_grid_inputs['intensification_dist'].get())
+
+        self.grid_losses_est = float(self.east_grid_inputs['grid_losses'].get())
+        self.grid_power_plants_capital_cost_est = float(self.east_grid_inputs['grid_capacity_investment_cost'].get())
+        self.grid_generation_cost_est = float(self.east_grid_inputs['grid_generation_cost'].get())
+        self.annual_new_grid_connections_limit_est = float(self.east_grid_inputs['max_connections'].get())
+        self.annual_grid_cap_gen_limit_est = float(self.east_grid_inputs['max_capacity'].get())
+        self.auto_intensification_est = float(self.east_grid_inputs['intensification_dist'].get())
+
+        self.grid_losses_sud = float(self.south_grid_inputs['grid_losses'].get())
+        self.grid_power_plants_capital_cost_sud = float(self.south_grid_inputs['grid_capacity_investment_cost'].get())
+        self.grid_generation_cost_sud = float(self.south_grid_inputs['grid_generation_cost'].get())
+        self.annual_new_grid_connections_limit_sud = float(self.south_grid_inputs['max_connections'].get())
+        self.annual_grid_cap_gen_limit_sud = float(self.south_grid_inputs['max_capacity'].get())
+        self.auto_intensification_sud = float(self.south_grid_inputs['intensification_dist'].get())
+
+        self.sa_pv_cost_1 = float(self.standalone_inputs['sa_cost_1'].get())
+        self.sa_pv_cost_2 = float(self.standalone_inputs['sa_cost_2'].get())
+        self.sa_pv_cost_3 = float(self.standalone_inputs['sa_cost_3'].get())
+        self.sa_pv_cost_4 = float(self.standalone_inputs['sa_cost_4'].get())
+        self.sa_pv_cost_5 = float(self.standalone_inputs['sa_cost_5'].get())
+        self.sa_pv_tech_life = float(self.standalone_inputs['sa_pv_tech_life'].get())
+        self.sa_pv_om = float(self.standalone_inputs['sa_pv_om'].get())
+
+
+        self.mg_pv_cost = float(self.mg_inputs['mg_pv_capital_cost'].get())
+        self.mg_pv_tech_life = float(self.mg_inputs['mg_pv_tech_life'].get())
+        self.mg_pv_om = float(self.mg_inputs['mg_pv_om'].get())
+        self.mg_wind_cost = float(self.mg_inputs['mg_wind_capital_cost'].get())
+        self.mg_wind_tech_life = float(self.mg_inputs['mg_wind_tech_life'].get())
+        self.mg_wind_om = float(self.mg_inputs['mg_wind_om'].get())
+        self.mg_hydro_cost = float(self.mg_inputs['mg_hydro_capital_cost'].get())
+        self.mg_hydro_tech_life = float(self.mg_inputs['mg_hydro_tech_life'].get())
+        self.mg_hydro_om = float(self.mg_inputs['mg_hydro_om'].get())
+
+        self.diesel_techs = 1 if self.diesel_inputs['diesel_technologies'].get() == 'Yes' else 0
+        self.diesel_fuel = float(self.diesel_inputs['diesel_fuel'].get())
+        self.mg_diesel_capital_cost = float(self.diesel_inputs['mg_diesel_capital_cost'].get())
+        self.mg_diesel_tech_life = float(self.diesel_inputs['mg_diesel_tech_life'].get())
+        self.mg_diesel_om = float(self.diesel_inputs['mg_diesel_om'].get())
+        self.sa_diesel_capital_cost = float(self.diesel_inputs['sa_diesel_capital_cost'].get())
+        self.sa_diesel_tech_life = float(self.diesel_inputs['sa_diesel_tech_life'].get())
+        self.sa_diesel_om = float(self.diesel_inputs['sa_diesel_om'].get())
+
+        self.hv_line_cost = float(self.td_inputs['hv_line_cost'].get())
+        self.hv_line_voltage = float(self.td_inputs['hv_line_voltage'].get())
+        self.mv_line_cost = float(self.td_inputs['mv_line_cost'].get())
+        self.mv_line_voltage = float(self.td_inputs['mv_line_voltage'].get())
+        self.max_mv_line_dist = float(self.td_inputs['max_mv_line_dist'].get())
+        self.lv_line_cost = float(self.td_inputs['lv_line_cost'].get())
+        self.lv_line_voltage = float(self.td_inputs['lv_line_voltage'].get())
+        self.max_lv_line_dist = float(self.td_inputs['max_lv_line_dist'].get())
+        self.dist_transformer_type = float(self.td_inputs['dist_transformer_type'].get())
+        self.dist_transformer_cost = float(self.td_inputs['dist_transformer_cost'].get())
+        self.mg_distribution_losses = float(self.td_inputs['mg_distribution_losses'].get())
+        self.mg_hh_connection_cost = float(self.td_inputs['mg_hh_connection_cost'].get())
+        self.grid_hh_connection_cost = float(self.td_inputs['grid_hh_connection_cost'].get())
 
         rural_tier_text = self.general_inputs['rural_tier'].get()
         urban_tier_text = self.general_inputs['urban_tier'].get()
@@ -800,23 +900,10 @@ class ScenarioTab(CTkScrollableFrame):
             start_year = self.start_year
             intermediate_year = self.intermediate_year
             end_year = self.end_year
+            max_grid_extension_dist = self.max_mv_line_dist
 
             # ToDo
             gis_grid_extension = False
-            max_grid_extension_dist = 50
-
-            # South grid specifications
-            auto_intensification_sud = 0
-            annual_new_grid_connections_limit_sud = 999999999
-            annual_grid_cap_gen_limit_sud = 999999999
-
-            # East grid specifications
-            auto_intensification_est = 0
-            annual_new_grid_connections_limit_est = 999999999
-            annual_grid_cap_gen_limit_est = 999999999
-            grid_generation_cost_est = 0.07
-            grid_power_plants_capital_cost_est = 2000
-            grid_losses_est = 0.08
 
             # Here the scenario run starts
 
@@ -858,11 +945,21 @@ class ScenarioTab(CTkScrollableFrame):
             Technology.set_default_values(base_year=start_year,
                                           start_year=start_year,
                                           end_year=end_year,
-                                          discount_rate=self.disc_rate)
+                                          discount_rate=self.disc_rate,
+                                          hv_line_cost=self.hv_line_cost,
+                                          hv_line_type=self.hv_line_voltage,
+                                          mv_line_cost=self.mv_line_cost,
+                                          mv_line_type=self.mv_line_voltage,
+                                          lv_line_cost=self.lv_line_cost,
+                                          lv_line_type=self.lv_line_voltage,
+                                          lv_line_max_length=self.max_mv_line_dist,
+                                          service_transf_cost=self.dist_transformer_cost,
+                                          service_transf_type=self.dist_transformer_type
+                                          )
 
             grid_calc_ouest = Technology(om_of_td_lines=0.1,
                                          distribution_losses=self.grid_losses_ouest,
-                                         connection_cost_per_hh=150,
+                                         connection_cost_per_hh=self.grid_hh_connection_cost,
                                          base_to_peak_load_ratio=0.8,
                                          capacity_factor=1,
                                          tech_life=30,
@@ -870,100 +967,100 @@ class ScenarioTab(CTkScrollableFrame):
                                          grid_price=self.grid_generation_cost_ouest)
 
             grid_calc_sud = Technology(om_of_td_lines=0.1,
-                                       distribution_losses=float(self.south_grid_inputs['grid_losses'].get()),
-                                       connection_cost_per_hh=150,
+                                       distribution_losses=self.grid_losses_sud,
+                                       connection_cost_per_hh=self.grid_hh_connection_cost,
                                        base_to_peak_load_ratio=0.8,
                                        capacity_factor=1,
                                        tech_life=30,
-                                       grid_capacity_investment=float(self.south_grid_inputs['grid_capacity_investment_cost'].get()),
-                                       grid_price=float(self.south_grid_inputs['grid_generation_cost'].get()))
+                                       grid_capacity_investment=self.grid_power_plants_capital_cost_sud,
+                                       grid_price=self.grid_generation_cost_sud)
 
             grid_calc_est = Technology(om_of_td_lines=0.1,
-                                       distribution_losses=grid_losses_est,
-                                       connection_cost_per_hh=150,
+                                       distribution_losses=self.grid_losses_est,
+                                       connection_cost_per_hh=self.grid_hh_connection_cost,
                                        base_to_peak_load_ratio=0.8,
                                        capacity_factor=1,
                                        tech_life=30,
-                                       grid_capacity_investment=grid_power_plants_capital_cost_est,
-                                       grid_price=grid_generation_cost_est)
+                                       grid_capacity_investment=self.grid_power_plants_capital_cost_est,
+                                       grid_price=self.grid_generation_cost_est)
 
             mg_hydro_calc = Technology(om_of_td_lines=0.02,
-                                       distribution_losses=0.05,
-                                       connection_cost_per_hh=92,
+                                       distribution_losses=self.mg_distribution_losses,
+                                       connection_cost_per_hh=self.mg_hh_connection_cost,
                                        base_to_peak_load_ratio=0.85,
                                        capacity_factor=0.5,
-                                       tech_life=35,
-                                       capital_cost={float("inf"): 5000},
-                                       om_costs=0.03,
+                                       tech_life=self.mg_hydro_tech_life,
+                                       capital_cost={float("inf"): self.mg_hydro_cost},
+                                       om_costs=self.mg_hydro_om,
                                        mini_grid=True)
 
             mg_wind_calc = Technology(om_of_td_lines=0.02,
-                                      distribution_losses=0.05,
-                                      connection_cost_per_hh=92,
+                                      distribution_losses=self.mg_distribution_losses,
+                                      connection_cost_per_hh=self.mg_hh_connection_cost,
                                       base_to_peak_load_ratio=0.85,
-                                      capital_cost={float("inf"): 3750},
-                                      om_costs=0.02,
-                                      tech_life=20,
+                                      capital_cost={float("inf"): self.mg_wind_cost},
+                                      om_costs=self.mg_wind_om,
+                                      tech_life=self.mg_wind_tech_life,
                                       mini_grid=True)
 
             mg_pv_calc = Technology(om_of_td_lines=0.02,
-                                    distribution_losses=0.05,
-                                    connection_cost_per_hh=92,
+                                    distribution_losses=self.mg_distribution_losses,
+                                    connection_cost_per_hh=self.mg_hh_connection_cost,
                                     base_to_peak_load_ratio=0.85,
-                                    tech_life=25,
-                                    om_costs=0.015,
-                                    capital_cost={float("inf"): 2950},
+                                    tech_life=self.mg_pv_tech_life,
+                                    om_costs=self.mg_pv_om,
+                                    capital_cost={float("inf"): self.mg_pv_cost},
                                     mini_grid=True)
 
             sa_pv_calc = Technology(base_to_peak_load_ratio=0.9,
-                                    tech_life=25,
-                                    om_costs=0.02,
-                                    capital_cost={float("inf"): 6950,
-                                                  1: 4470,
-                                                  0.100: 6380,
-                                                  0.050: 8780,
-                                                  0.020: 9620
+                                    tech_life=self.sa_pv_tech_life,
+                                    om_costs=self.sa_pv_om,
+                                    capital_cost={float("inf"): self.sa_pv_cost_5,
+                                                  1: self.sa_pv_cost_4,
+                                                  0.100: self.sa_pv_cost_3,
+                                                  0.050: self.sa_pv_cost_2,
+                                                  0.020: self.sa_pv_cost_1
                                                   },
                                     standalone=True)
 
             mg_diesel_calc = Technology(om_of_td_lines=0.02,
-                                        distribution_losses=0.05,
-                                        connection_cost_per_hh=92,
+                                        distribution_losses=self.mg_distribution_losses,
+                                        connection_cost_per_hh=self.mg_distribution_losses,
                                         base_to_peak_load_ratio=0.85,
                                         capacity_factor=0.7,
-                                        tech_life=20,
-                                        om_costs=0.1,
-                                        capital_cost={float("inf"): 672},
+                                        tech_life=self.mg_diesel_tech_life,
+                                        om_costs=self.mg_diesel_om,
+                                        capital_cost={float("inf"): self.mg_diesel_capital_cost},
                                         mini_grid=True)
 
             sa_diesel_calc = Technology(base_to_peak_load_ratio=0.9,
                                         capacity_factor=0.5,
-                                        tech_life=20,
-                                        om_costs=0.1,
-                                        capital_cost={float("inf"): 814},
+                                        tech_life=self.sa_diesel_tech_life,
+                                        om_costs=self.sa_diesel_om,
+                                        capital_cost={float("inf"): self.sa_diesel_capital_cost},
                                         standalone=True)
 
-            sa_diesel_cost = {'diesel_price': 0.8,
+            sa_diesel_cost = {'diesel_price': self.diesel_fuel,
                               'efficiency': 0.28,
                               'diesel_truck_consumption': 14,
                               'diesel_truck_volume': 300}
 
-            mg_diesel_cost = {'diesel_price': 0.8,
+            mg_diesel_cost = {'diesel_price': self.diesel_fuel,
                               'efficiency': 0.33,
                               'diesel_truck_consumption': 33.7,
                               'diesel_truck_volume': 15000}
 
-            annual_new_grid_connections_limit = {'Est': annual_new_grid_connections_limit_est,
-                                                 'Sud': annual_new_grid_connections_limit_sud,
+            annual_new_grid_connections_limit = {'Est': self.annual_new_grid_connections_limit_est,
+                                                 'Sud': self.annual_new_grid_connections_limit_sud,
                                                  'Ouest': self.annual_new_grid_connections_limit_ouest}
 
-            annual_grid_cap_gen_limit = {'Est': annual_grid_cap_gen_limit_est,
-                                         'Sud': annual_grid_cap_gen_limit_sud,
+            annual_grid_cap_gen_limit = {'Est': self.annual_grid_cap_gen_limit_est,
+                                         'Sud': self.annual_grid_cap_gen_limit_sud,
                                          'Ouest': self.annual_grid_cap_gen_limit_ouest}
 
             grids = ['Est', 'Ouest', 'Sud']
             grid_calcs = [grid_calc_est, grid_calc_ouest, grid_calc_sud]
-            auto_intensifications = [auto_intensification_est, self.auto_intensification_ouest, auto_intensification_sud]
+            auto_intensifications = [self.auto_intensification_est, self.auto_intensification_ouest, self.auto_intensification_sud]
 
             onsseter.df.loc[onsseter.df['Region'] == 'Haut-Katanga', 'ClosestGrid'] = 'Sud'
             onsseter.df.loc[onsseter.df['Region'] == 'Haut-Lomami', 'ClosestGrid'] = 'Sud'
@@ -1034,7 +1131,7 @@ class ScenarioTab(CTkScrollableFrame):
                     onsseter.df['extension_distance_' + '{}'.format(year)] = 99
 
                     onsseter.pre_screening(eleclimit, year, time_step, prioritization, self.auto_intensification_ouest,
-                                           auto_intensification_sud, auto_intensification_est)
+                                           self.auto_intensification_sud, self.auto_intensification_est)
 
                 for grid, grid_calc, auto_intensification in zip(grids, grid_calcs, auto_intensifications):
                     grid_cap_gen_limit = time_step * annual_grid_cap_gen_limit[grid] * 1000
@@ -1091,7 +1188,7 @@ class ScenarioTab(CTkScrollableFrame):
                     grid_investment = grid_investment_combined
 
                 onsseter.results_columns(year, time_step, prioritization, self.auto_intensification_ouest,
-                                         auto_intensification_sud, auto_intensification_est)
+                                         self.auto_intensification_sud, self.auto_intensification_est)
 
                 grid_investment = pd.DataFrame(grid_investment)
 
@@ -1104,7 +1201,7 @@ class ScenarioTab(CTkScrollableFrame):
                     onsseter.apply_limitations_gis(year, time_step)
                 else:
                     onsseter.apply_limitations(eleclimit, year, time_step, prioritization, self.auto_intensification_ouest,
-                                               auto_intensification_sud, auto_intensification_est)
+                                               self.auto_intensification_sud, self.auto_intensification_est)
 
                 onsseter.calculate_new_capacity(mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                                                 sa_diesel_calc, grid_calc_ouest, grid_calc_sud, grid_calc_est, year)
