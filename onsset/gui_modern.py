@@ -26,6 +26,50 @@ global end_year
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
+class CollapsibleFrame(CTkFrame):
+    def __init__(self, master=None, collapsed=True, header_text="", *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+
+        self.is_collapsed = True
+
+        # Header
+        self.header_frame = CTkFrame(self, fg_color="transparent")
+        self.header_frame.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+
+        self.minimize_label = CTkLabel(self.header_frame, text="\u25BC", cursor="hand2")
+        self.minimize_label.grid(row=0, column=0)
+        self.minimize_label.bind("<Button-1>", lambda e: self.toggle())  # Bind toggle function to label click
+
+        self.header_label = CTkLabel(self.header_frame, text=header_text)
+        self.header_label.grid(row=0, column=1, padx=5)
+
+        # Content
+        self.content_frame = CTkFrame(self, fg_color="transparent")
+        self.content_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
+        if collapsed:
+            self.content_frame.grid_remove()
+            self.minimize_label.configure(text="\u25B6")  # Right-pointing triangle for "expand"
+
+    def toggle(self):
+        if self.is_collapsed:
+            self.content_frame.grid()
+            self.minimize_label.configure(text="\u25BC")  # Down-pointing triangle for "collapse"
+        else:
+            self.content_frame.grid_remove()
+            self.minimize_label.configure(text="\u25B6")  # Right-pointing triangle for "expand"
+        self.is_collapsed = not self.is_collapsed
+
+    def set_content(self, item, row_no, col_no):
+
+        item.grid(in_=self.content_frame,
+                  padx=10,
+                  pady=item.pad_y if hasattr(item, 'pad_y') else 0,
+                  row=row_no,
+                  column=col_no,
+                  sticky='w')
+        self.content_frame.grid_rowconfigure(0, weight=1)
+
 class App(CTk):
     def __init__(self):
         super().__init__()
@@ -474,13 +518,10 @@ class ScenarioTab(CTkScrollableFrame):
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
-        def create_entry_boxes(frame_label, info_dict, output_dict):
-            # Frame for south grid parameters
-            frame_label = CTkLabel(self, text=frame_label)
-            frame_label.pack(padx=40, fill='x')
+        def create_entry_boxes(frame_label, info_dict, output_dict, collapsed=True):
 
-            frame = CTkFrame(self, border_width=5)
-            frame.pack(pady=(0, 10), padx=40, fill='x')
+            frame = CollapsibleFrame(self, collapsed=collapsed, header_text=frame_label, border_width=5)
+            frame.pack(pady=10, padx=40, fill='x')
 
             i = 0
             for key in list(info_dict):
@@ -492,22 +533,27 @@ class ScenarioTab(CTkScrollableFrame):
                     y = (0, 0)
                 info = info_dict[key]
                 label = CTkLabel(frame, text=info[0])
-                label.grid(row=i, column=0, sticky='w', padx=10, pady=y)
+                label.pad_y = y
+                frame.set_content(label, i, 0)
+
                 if type(info[1]) == list:
                     entry = CTkOptionMenu(frame, values=info[1])
                 else:
                     entry = CTkEntry(frame)
                     entry.insert(10, str(info[1]))
-                entry.grid(row=i, column=1, sticky='w', pady=y)
+                entry.pad_y = y
+
                 output_dict[key] = entry
+                frame.set_content(entry, i, 1)
 
                 try:
                     description = CTkLabel(frame, text=info[2])
-                    description.grid(row=i, column=2, sticky='w', padx=10, pady=y)
+                    description.pad_y = y
+                    frame.set_content(description, i, 2)
                 except:
                     pass
-
                 i += 1
+            return frame
 
         # Define and create general parameters
         general_dict = {
@@ -529,7 +575,7 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.general_inputs = {}
 
-        create_entry_boxes("Enter general parameters", general_dict, self.general_inputs)
+        create_entry_boxes("Enter general parameters", general_dict, self.general_inputs, collapsed=False)
 
         # Define and create south grid parameters
         south_grid_dict = {
@@ -1368,127 +1414,3 @@ if __name__ == "__main__":
     app.mainloop()
     app.quit()
 
-
-
-
-# # Frame for off-grid technology costs
-        # off_grid_frame = CTkFrame(self) #, text="Enter off-grid technology parameters")
-        # off_grid_frame.pack(pady=10, padx=40, fill='x')
-        #
-        # l11 = CTkLabel(off_grid_frame, text="Diesel techs")
-        # l11.grid(row=0, column=0, sticky='w')
-        # e11 = CTkEntry(off_grid_frame)
-        # e11.grid(row=0, column=1, sticky='w')
-        # e11.insert(10, 0)
-        #
-        # l12 = CTkLabel(off_grid_frame, text="Diesel price")
-        # l12.grid(row=1, column=0, sticky='w')
-        # e12 = CTkEntry(off_grid_frame)
-        # e12.grid(row=1, column=1, sticky='w')
-        # e12.insert(10, 0.5)
-        #
-        # l13 = CTkLabel(off_grid_frame, text="Grid generation cost")
-        # l13.grid(row=2, column=0, sticky='w')
-        # e13 = CTkEntry(off_grid_frame)
-        # e13.grid(row=2, column=1, sticky='w')
-        # e13.insert(10, 0.05)
-        #
-        # l14 = CTkLabel(off_grid_frame, text="SA Diesel capital cost")
-        # l14.grid(row=3, column=0, sticky='w')
-        # e14 = CTkEntry(off_grid_frame)
-        # e14.grid(row=3, column=1, sticky='w')
-        # e14.insert(10, 938)
-        #
-        # l15 = CTkLabel(off_grid_frame, text="MG Diesel capital cost")
-        # l15.grid(row=4, column=0, sticky='w')
-        # e15 = CTkEntry(off_grid_frame)
-        # e15.grid(row=4, column=1, sticky='w')
-        # e15.insert(10, 721)
-        #
-        # l16 = CTkLabel(off_grid_frame, text="MG PV capital cost")
-        # l16.grid(row=5, column=0, sticky='w')
-        # e16 = CTkEntry(off_grid_frame)
-        # e16.grid(row=5, column=1, sticky='w')
-        # e16.insert(10, "2950")
-        #
-        # l17 = CTkLabel(off_grid_frame, text="MG Wind capital cost")
-        # l17.grid(row=6, column=0, sticky='w')
-        # e17 = CTkEntry(off_grid_frame)
-        # e17.grid(row=6, column=1, sticky='w')
-        # e17.insert(10, "3750")
-        #
-        # l18 = CTkLabel(off_grid_frame, text="MG Hydro capital cost")
-        # l18.grid(row=7, column=0, sticky='w')
-        # e18 = CTkEntry(off_grid_frame)
-        # e18.grid(row=7, column=1, sticky='w')
-        # e18.insert(10, "3000")
-        #
-        # l19 = CTkLabel(off_grid_frame, text="SA PV cost (<20 W)")
-        # l19.grid(row=8, column=0, sticky='w')
-        # e19 = CTkEntry(off_grid_frame)
-        # e19.grid(row=8, column=1, sticky='w')
-        # e19.insert(10, "9620")
-        #
-        # l20 = CTkLabel(off_grid_frame, text="SA PV cost (21-50 W)")
-        # l20.grid(row=9, column=0, sticky='w')
-        # e20 = CTkEntry(off_grid_frame)
-        # e20.grid(row=9, column=1, sticky='w')
-        # e20.insert(10, "8780")
-        #
-        # l21 = CTkLabel(off_grid_frame, text="SA PV cost (51-100 W)")
-        # l21.grid(row=10, column=0, sticky='w')
-        # e21 = CTkEntry(off_grid_frame)
-        # e21.grid(row=10, column=1, sticky='w')
-        # e21.insert(10, "6380")
-        #
-        # l22 = CTkLabel(off_grid_frame, text="SA PV cost (101-1000 W)")
-        # l22.grid(row=11, column=0, sticky='w')
-        # e22 = CTkEntry(off_grid_frame)
-        # e22.grid(row=11, column=1, sticky='w')
-        # e22.insert(10, "4470")
-        #
-        # l23 = CTkLabel(off_grid_frame, text="SA PV cost (>1000 W)                                      ",
-        #                bg=secondary_color)
-        # l23.grid(row=12, column=0, sticky='w')
-        # e23 = CTkEntry(off_grid_frame)
-        # e23.grid(row=12, column=1, sticky='w')
-        # e23.insert(10, "6950")
-        #
-        # # Frame for T&D costs
-        # td_frame = CTkLabelFrame(self, text="Enter T&D parameters")
-        # td_frame.pack(pady=10, padx=40, fill='x')
-        #
-        # l24 = CTkLabel(td_frame, text="HV line cost")
-        # l24.grid(row=0, column=0, sticky='w')
-        # e24 = CTkEntry(td_frame)
-        # e24.grid(row=0, column=1, sticky='w')
-        # e24.insert(10, "53000")
-        #
-        # l25 = CTkLabel(td_frame, text="MV line cost                                                     ",
-        #                bg=secondary_color)
-        # l25.grid(row=1, column=0, sticky='w')
-        # e25 = CTkEntry(td_frame)
-        # e25.grid(row=1, column=1, sticky='w')
-        # e25.insert(10, "7000")
-        #
-        # l26 = CTkLabel(td_frame, text="LV line cost")
-        # l26.grid(row=3, column=0, sticky='w')
-        # e26 = CTkEntry(td_frame)
-        # e26.grid(row=3, column=1, sticky='w')
-        # e26.insert(10, "4250")
-        #
-        # # Bottom Frame for running and saving scenario
-        # bottom_frame = tk.Frame(self, height=20, bg=primary_color)
-        # bottom_frame.pack(fill='x', pady=20)
-        #
-        # # Run scenario button
-        # run_button = tk.Button(bottom_frame, text="Run scenario", command=lambda: run_scenarios())
-        # run_button.place(relwidth=0.2, relx=0.2)
-        #
-        # # Save results button
-        # button_save_calib = tk.Button(bottom_frame, text="Save result files", command=lambda: save_results(),
-        #                               state='disabled')
-        # button_save_calib.place(relwidth=0.2, relx=0.6)
-        #
-        # bottom_frame_2 = tk.Frame(canvas_frame, height=20, bg=primary_color)
-        # bottom_frame_2.pack(fill='x', pady=20)
