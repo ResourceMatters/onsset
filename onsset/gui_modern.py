@@ -97,87 +97,91 @@ class App(CTk):
         self.progressbar.start()
         self.progressbar.grid_forget()
 
+        self.about = About(self)
         self.calib = CalibrationTab(self, self.progressbar)
         self.scenario = ScenarioTab(self, self.df, self.end_year, self.progressbar)
         self.result = ResultsTab(self)
 
-        self.sidebar_frame = Menu(self, self.calib, self.scenario, self.result)
+        self.sidebar_frame = Menu(self, self.calib, self.scenario, self.result, self.about)
 
 
 class Menu(CTkFrame):
-    def __init__(self, parent, calib, scenario, result):
+    def __init__(self, parent, calib, scenario, result, about):
         super().__init__(parent)
         self.configure(width=140)
         self.configure(corner_radius=0)
         self.grid(row=0, column=0, rowspan=5, sticky="nsew")
-        self.grid_rowconfigure(5, weight=1)
+        self.grid_rowconfigure(6, weight=1)
 
+        self.about = about
         self.calib = calib
         self.scenario = scenario
         self.result = result
 
-        self.create_widgets(parent.scenario.df)
+        self.create_widgets()
 
-        self.display_calibration() # Set this as the start tab
+        self.display_about()  # Set this as the start tab
 
-    def create_widgets(self, df):
+    def create_widgets(self):
         self.logo_label = CTkLabel(self, text="Menu", font=CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
+        self.sidebar_button_0 = CTkButton(self, text="About", command=self.display_about)
+        self.sidebar_button_0.grid(row=1, column=0, padx=20, pady=10)
+
         self.sidebar_button_1 = CTkButton(self, text='Calibration', command=self.display_calibration)
-        self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
+        self.sidebar_button_1.grid(row=2, column=0, padx=20, pady=10)
 
         self.sidebar_button_2 = CTkButton(self, text='Run scenario', command=self.display_scenario)
-        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+        self.sidebar_button_2.grid(row=3, column=0, padx=20, pady=10)
 
         self.sidebar_button_3 = CTkButton(self, text='Visualize results', command=self.display_results)
-        self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
+        self.sidebar_button_3.grid(row=4, column=0, padx=20, pady=10)
 
-        # self.sidebar_button_4 = CTkButton(self, text='Save results', command=lambda: self.save_results(df))
-        # self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
+        self.sidebar_button_4 = CTkButton(self, text='Additional inputs')
+        self.sidebar_button_4.grid(row=5, column=0, padx=20, pady=10)
 
         self.appearance_mode_label = CTkLabel(self, text="Appearance Mode", anchor="w")
-        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = CTkOptionMenu(self, values=["Light", "Dark"],command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 10))
 
         self.scaling_label = CTkLabel(self, text="Zoom", anchor="w")
-        self.scaling_label.grid(row=8, column=0, padx=20, pady=(10, 0))
+        self.scaling_label.grid(row=9, column=0, padx=20, pady=(10, 0))
         self.scaling_optionemenu = CTkOptionMenu(self, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
-        self.scaling_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 20))
+        self.scaling_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 20))
 
         self.language_label = CTkLabel(self, text="Language", anchor="w")
-        self.language_label.grid(row=10, column=0, padx=20, pady=(10, 0))
+        self.language_label.grid(row=11, column=0, padx=20, pady=(10, 0))
         self.language_optionmenu = CTkOptionMenu(self, values=["English", "French"])
-        self.language_optionmenu.grid(row=11, column=0, padx=20, pady=(10, 20))
+        self.language_optionmenu.grid(row=12, column=0, padx=20, pady=(10, 20))
 
-        # set default values
-        #self.sidebar_button_3.configure(state="disabled")
         self.appearance_mode_optionemenu.set("Dark")
         self.scaling_optionemenu.set("100%")
 
-    # def save_results(self, df):
-    #     if df.size == 0:
-    #         CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
-    #     else:
-    #         file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
-    #         #df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
-    #         CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+    def display_about(self):
+        self.calib.grid_forget()
+        self.scenario.grid_forget()
+        self.result.grid_forget()
+        self.about.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
 
     def display_scenario(self):
         self.calib.grid_forget()
         self.scenario.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
         self.result.grid_forget()
+        self.about.grid_forget()
 
     def display_calibration(self):
         self.calib.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
         self.scenario.grid_forget()
         self.result.grid_forget()
+        self.about.grid_forget()
 
     def display_results(self):
         self.calib.grid_forget()
         self.scenario.grid_forget()
         self.result.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
+        self.about.grid_forget()
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         set_appearance_mode(new_appearance_mode)
@@ -185,6 +189,54 @@ class Menu(CTkFrame):
     def change_scaling_event(self, new_scaling: str):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         set_widget_scaling(new_scaling_float)
+
+
+class About(CTkScrollableFrame):
+    # About frame
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
+
+        about_text_frame = CTkFrame(self, border_width=5)
+        about_text_frame.pack(pady=10, padx=40, fill='x')
+
+        text = CTkTextbox(about_text_frame, fg_color="transparent", height=600)
+        text.pack(padx=10, pady=10, fill='x')
+        text.insert("0.0",
+                    "About\n\n"
+                    "This interface is used to run geospatial electrification analysis for the DRC using the Open" 
+                    "Source Spatial Electrification Tool (OnSSET) in a simple manner.\n" 
+                    "The interface is built on the freely available and open-source OnSSET code version available at "
+                    "https://github.com/ResourceMatters/onsset/tree/gui\n\n"
+                    
+                    "The user needs a csv-file with extracted GIS data for the DRC.\n"
+                    "The interface has four separate sections, briefly explained below.\n\n"
+                    
+                    "Calibration\n"
+                    "In this section, the user calibrates the data in the csv-file to match national statistics with"
+                    "regards to population, urban share of population, and currently electrified settlements.\n\n"
+                    
+                    "Scenario\n"
+                    "In this section, the user uses the calibrated file to run least-cost electrification investment scenarios.\n"
+                    "Here, the user can update the key inputs with regards to demand and technology costs.\n\n"
+                    
+                    "Visualization\n"
+                    "After running a scenario, the user can quickly visualize and save key results in this section.\n\n"
+                    
+                    "Additional inputs\n"
+                    "Here the user can update additional inputs for the scenario runs if detailed data is available.\n\n"
+                    
+                    "Additional information\n"
+                    " * Note that all inputs in the interface use a dot ( . ) for decimals, not a comma ( , )\n"
+                    " * In case something goes wrong, an error message is displayed, which can also be saved. This can be useful in case you need to contact someone for support.\n"
+                    " * For more information about the Congo Epela project, see https://congoepela.resourcematters.org/\n"
+                    " * For more information about OnSSET and support, see:\n"
+                    "     * The OnSSET documentation: https://onsset.readthedocs.io/\n"
+                    "     * The OnSSET website: https://www.onsset.org/\n"
+                    "     * The OnSSET forum: https://groups.google.com/g/onsset\n"
+                    "     * The freely available online course on OnSSET and geospatial electrification modelling: https://www.open.edu/openlearncreate/course/view.php?id=11533"
+                    )
+
 
 
 class CalibrationTab(CTkScrollableFrame):
