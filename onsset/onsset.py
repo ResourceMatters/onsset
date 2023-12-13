@@ -285,7 +285,7 @@ class Technology:
         step = start_year - self.base_year
         # If the technology life is less than the project life, we will have to invest twice to buy it again
         if self.tech_life + step < project_life:
-            reinvest_year = self.tech_life + step
+            reinvest_year = int(self.tech_life + step)
 
         year = np.arange(project_life)
         el_gen = np.outer(np.asarray(generation_per_year), np.ones(project_life))
@@ -296,7 +296,8 @@ class Technology:
         investments[step] = 1
         # Calculate the year of re-investment if tech_life is smaller than project life
         if reinvest_year:
-            investments[reinvest_year] = 1
+            print(reinvest_year)
+            investments[reinvest_year] = 1 # ToDo Error if  diesel life too short
         investments = np.outer(total_investment_cost, investments)
 
         grid_capacity_investments = np.zeros(project_life)
