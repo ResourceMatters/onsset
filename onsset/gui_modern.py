@@ -1119,7 +1119,8 @@ class ScenarioTab(CTkScrollableFrame):
                 sa_diesel_investment, sa_pv_investment, mg_diesel_investment, mg_pv_investment, mg_wind_investment, \
                     mg_hydro_investment = onsseter.calculate_off_grid_lcoes(mg_hydro_calc, mg_wind_calc, mg_pv_calc,
                                                                             sa_pv_calc, mg_diesel_calc,
-                                                                            sa_diesel_calc, year, end_year, time_step)
+                                                                            sa_diesel_calc, year, end_year, time_step,
+                                                                            diesel_techs=self.diesel_techs)
 
                 grid_investment = np.zeros(len(onsseter.df['X_deg']))
                 grid_investment_combined = np.zeros(len(onsseter.df['X_deg']))
@@ -1265,6 +1266,7 @@ class ScenarioTab(CTkScrollableFrame):
         def internal_display_scenario():
             csv_filename = r"{}".format(self.filename)
             df = pd.read_csv(csv_filename)
+            df = df.sample(n=100)
             self.label_file.configure(text=self.filename + " opened!")
             self.clear_data()
             self.tv1["column"] = list(df.columns)
@@ -1287,6 +1289,12 @@ class ScenarioTab(CTkScrollableFrame):
             CTkMessagebox(title='Error', message=f"Could not find the file {self.filename}", icon="warning")
         except AttributeError:
             CTkMessagebox(title='Error', message="No CSV file selected", icon="warning")
+        except Exception as e:
+            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                option_2='Display error message', icon='warning')
+
+            if msg.get() == 'Display error message':
+                self.error_popup(e)
 
         self.stop_progress()
         if prev_state == 'normal':
@@ -1368,12 +1376,15 @@ class ResultsTab(CTkTabview):
 
             fig.set_size_inches(9,9)
 
-            colors = {3: '#ffc700',
+            colors = {2: '#f67c41',
+                      3: '#ffc700',
+                      4: '#4b0082',
                       5: '#e628a0',
                       6: '#1b8f4d',
                       7: '#28e66d',
                       99: '#808080',
-                      1: '#4e53de'}
+                      1: '#4e53de',
+                      }
 
             for key in colors.keys():
                 ax.scatter(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'x_3857'],
@@ -1397,20 +1408,20 @@ class ResultsTab(CTkTabview):
             self.legend_frame.place(rely=0.5, relx=1, anchor=E)
             self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
             self.label_1.grid(row=0, column=0, padx=30, pady=10)
-            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'),
-                                    text_color='#ffc700')
-            self.label_3.grid(row=1, column=0, padx=30, pady=10)
+            self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+            self.label_2.grid(row=1, column=0, padx=30, pady=10)
+            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
+            self.label_3.grid(row=2, column=0, padx=30, pady=10)
+            self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+            self.label_4.grid(row=3, column=0, padx=30, pady=10)
             self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
-            self.label_5.grid(row=2, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'),
-                                    text_color='#1b8f4d')
-            self.label_6.grid(row=3, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'),
-                                    text_color='#28e66d')
-            self.label_6.grid(row=4, column=0, padx=30, pady=10)
-            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'),
-                                     text_color='#808080')
-            self.label_99.grid(row=5, column=0, padx=30, pady=10)
+            self.label_5.grid(row=4, column=0, padx=30, pady=10)
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
+            self.label_6.grid(row=5, column=0, padx=30, pady=10)
+            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
+            self.label_6.grid(row=6, column=0, padx=30, pady=10)
+            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
+            self.label_99.grid(row=7, column=0, padx=30, pady=10)
 
             try:
                 self.toolbar.destroy()
@@ -1426,9 +1437,9 @@ class ResultsTab(CTkTabview):
         else:
             yearsofanalysis = [intermediate_year, end_year]
 
-            techs = ["Grid", "SA_PV", "MG_PV", "MG_Wind", "MG_Hydro"]
-            labels = ["Grid", "Stand-alone PV", "Mini-grid PV", "Mini-grid Wind", "Mini-grid Hydro"]
-            colors = ['#4e53de', '#ffc700', '#e628a0', '#1b8f4d', '#28e66d']
+            techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro"]
+            labels = ["Grid", "Stand-alone Diesel", "Stand-alone PV", "Mini-grid Diesel", "Mini-grid PV", "Mini-grid Wind", "Mini-grid Hydro"]
+            colors = ['#4e53de', '#f67c41', '#ffc700', '#4b0082', '#e628a0', '#1b8f4d', '#28e66d']
 
             elements = []
             for year in yearsofanalysis:
@@ -1474,16 +1485,16 @@ class ResultsTab(CTkTabview):
 
             summary_table = pd.DataFrame(index=index, columns=columns)
 
-            summary_table[columns[0]] = summary.iloc[0:5].astype(int).tolist() + [int(summary.iloc[0:5].sum())]
-            summary_table[columns[1]] = summary.iloc[5:10].astype(int).tolist() + [int(summary.iloc[5:10].sum())]
-            summary_table[columns[2]] = summary.iloc[10:15].astype(int).tolist() + [int(summary.iloc[10:15].sum())]
-            summary_table[columns[3]] = [round(x / 1e4) / 1e2 for x in summary.iloc[15:20].astype(float).tolist()] + [
-                round(summary.iloc[15:20].sum() / 1e4) / 1e2]
-            summary_table[columns[4]] = summary.iloc[20:25].astype(int).tolist() + [int(summary.iloc[20:25].sum())]
-            summary_table[columns[5]] = summary.iloc[25:30].astype(int).tolist() + [int(summary.iloc[25:30].sum())] + summary_table[columns[1]]
-            summary_table[columns[6]] = summary.iloc[30:35].astype(int).tolist() + [int(summary.iloc[30:35].sum())] + summary_table[columns[2]]
-            summary_table[columns[7]] = [round(x / 1e4) / 1e2 for x in summary.iloc[35:40].astype(float).tolist()] + [
-                round(summary.iloc[35:40].sum() / 1e4) / 1e2] + summary_table[columns[3]]
+            summary_table[columns[0]] = summary.iloc[0:7].astype(int).tolist() + [int(summary.iloc[0:7].sum())]
+            summary_table[columns[1]] = summary.iloc[7:14].astype(int).tolist() + [int(summary.iloc[7:14].sum())]
+            summary_table[columns[2]] = summary.iloc[14:21].astype(int).tolist() + [int(summary.iloc[14:21].sum())]
+            summary_table[columns[3]] = [round(x / 1e4) / 1e2 for x in summary.iloc[21:28].astype(float).tolist()] + [
+                round(summary.iloc[21:28].sum() / 1e4) / 1e2]
+            summary_table[columns[4]] = summary.iloc[28:35].astype(int).tolist() + [int(summary.iloc[28:35].sum())]
+            summary_table[columns[5]] = summary.iloc[35:42].astype(int).tolist() + [int(summary.iloc[35:42].sum())] + summary_table[columns[1]]
+            summary_table[columns[6]] = summary.iloc[42:49].astype(int).tolist() + [int(summary.iloc[42:49].sum())] + summary_table[columns[2]]
+            summary_table[columns[7]] = [round(x / 1e4) / 1e2 for x in summary.iloc[49:56].astype(float).tolist()] + [
+                round(summary.iloc[49:56].sum() / 1e4) / 1e2] + summary_table[columns[3]]
 
             summary_plot = summary_table.drop(labels='Total', axis=0)
             fig_size = [10,8]
@@ -1539,14 +1550,18 @@ class ResultsTab(CTkTabview):
             self.legend_frame.place(rely=0.5, relx=1, anchor=E)
             self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
             self.label_1.grid(row=0, column=0, padx=30, pady=10)
+            self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+            self.label_2.grid(row=1, column=0, padx=30, pady=10)
             self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
-            self.label_3.grid(row=1, column=0, padx=30, pady=10)
+            self.label_3.grid(row=2, column=0, padx=30, pady=10)
+            self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+            self.label_4.grid(row=3, column=0, padx=30, pady=10)
             self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
-            self.label_5.grid(row=2, column=0, padx=30, pady=10)
+            self.label_5.grid(row=4, column=0, padx=30, pady=10)
             self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
-            self.label_6.grid(row=3, column=0, padx=30, pady=10)
+            self.label_6.grid(row=5, column=0, padx=30, pady=10)
             self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
-            self.label_6.grid(row=4, column=0, padx=30, pady=10)
+            self.label_6.grid(row=6, column=0, padx=30, pady=10)
             # self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
             # self.label_99.grid(row=5, column=0, padx=30, pady=10)
 
