@@ -217,8 +217,8 @@ class About(CTkScrollableFrame):
                     "Visualization\n"
                     "After running a scenario, the user can quickly visualize and save key results in this section.\n\n"
                     
-                    "Additional inputs\n"
-                    "Here the user can update additional inputs for the scenario runs if detailed data is available.\n\n"
+                    # "Additional inputs\n"
+                    # "Here the user can update additional inputs for the scenario runs if detailed data is available.\n\n"
                     
                     "Additional information\n"
                     " * Note that all inputs in the interface use a dot ( . ) for decimals, not a comma ( , )\n"
@@ -232,16 +232,52 @@ class About(CTkScrollableFrame):
                     )
 
 
-
 class CalibrationTab(CTkScrollableFrame):
     # Calibration frame
     def __init__(self, parent, progressbar):
         super().__init__(parent)
+        self.filename = None
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
         self.progressbar = progressbar
         self.create_widgets()
     
     def create_widgets(self):
+        # Frame for TreeView
+        treeview_label = CTkLabel(self, text='GIS CSV data')
+        treeview_label.pack(padx=40, fill='x')
+        frame1 = CTkFrame(self, height=200, border_width=5)
+        # Treeview widget
+        bg_color = '#7f7f7f'
+        text_color = 'black'
+        treestyle = ttk.Style()
+        treestyle.theme_use('default')
+        treestyle.configure("Treeview", background=bg_color, foreground=text_color, fieldbackground=bg_color,
+                            borderwidth=0)
+
+        self.tv1 = ttk.Treeview(frame1)
+        treescrolly = CTkScrollbar(frame1, orientation="vertical", command=self.tv1.yview)
+        treescrollx = CTkScrollbar(frame1, orientation="horizontal", command=self.tv1.xview)
+        self.tv1.configure(xscrollcommand=treescrollx.set, yscrollcommand=treescrolly.set)
+        treescrollx.pack(side="bottom", fill="x")
+        treescrolly.pack(side="right", fill="y")
+        self.tv1.pack(fill='both', expand=1)
+        frame1.pack(pady=(0, 10), padx=40, fill='x')
+
+        # Frame for selecting csv file
+        select_csv_frame = CTkFrame(self, height=100, border_width=5)  # , text="Select the calibrated csv file")
+        select_csv_frame.pack(pady=10, padx=40, fill='x')
+
+        self.label_file = CTkLabel(select_csv_frame, text="No file selected, click the browse button!")
+        self.label_file.place(rely=0.05, relx=0.05)
+
+        # csv file buttons
+        self.select_csv_button = CTkButton(select_csv_frame, text="Browse a file",
+                                           command=lambda: self.csv_File_dialog())
+        self.select_csv_button.place(rely=0.4, relx=0.2)
+
+        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Display File",
+                                            command=lambda: self.load_scenario_csv_data())
+        self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
         self.start_year_frame = CTkFrame(self, border_width=5)
         self.start_year_frame.pack(pady=10, padx=40, fill='x')
@@ -365,13 +401,59 @@ class CalibrationTab(CTkScrollableFrame):
         self.button_save_calib.place(relx=0.6, rely=0.3)
 
     def csv_File_dialog(self):
-        filename = filedialog.askopenfilename(title="Select the csv file with GIS data")
-        return filename
+        self.filename = filedialog.askopenfilename(title="Select the csv file with GIS data")
+        self.label_file.configure(text=self.filename)
+        return None
+
+    def load_scenario_csv_data(self):
+
+        def internal_display_scenario():
+            csv_filename = r"{}".format(self.filename)
+            df = pd.read_csv(csv_filename)
+            df = df.sample(n=100)
+            self.label_file.configure(text=self.filename + " opened!")
+            self.clear_data()
+            self.tv1["column"] = list(df.columns)
+            self.tv1["show"] = "headings"
+            for column in self.tv1["columns"]:
+                self.tv1.heading(column, text=column)
+            df_rows = df.to_numpy().tolist()
+            for row in df_rows:
+                self.tv1.insert("", "end", values=row)
+
+        self.start_progress()
+        prev_state = self.button_save_calib.cget('state')
+        self.button_save_calib.configure(state='disabled')
+        try:
+            internal_display_scenario()
+            #threading.Thread(target=internal_display_scenario, daemon=True).start()
+        except ValueError:
+            CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+        except FileNotFoundError:
+            CTkMessagebox(title='Error', message=f"Could not find the file {self.filename}", icon="warning")
+        except AttributeError:
+            CTkMessagebox(title='Error', message="No CSV file selected", icon="warning")
+        except Exception as e:
+            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                option_2='Display error message', icon='warning')
+
+            if msg.get() == 'Display error message':
+                self.error_popup(e)
+
+        self.stop_progress()
+        if prev_state == 'normal':
+            self.button_save_calib.configure(state='normal')
+
+    def clear_data(self):
+        self.tv1.delete(*self.tv1.get_children())
 
     def load_csv_data(self):
-        file_path = self.csv_File_dialog()
+        file_path = self.filename
 
-        if file_path[-3:] == 'csv':
+        if self.filename is None:
+            CTkMessagebox(title='Error', message='No CSV file selected', icon="warning")
+            return None
+        elif file_path[-3:] == 'csv':
             try:
                 csv_filename = r"{}".format(file_path)
                 onsseter = SettlementProcessor(csv_filename)
@@ -388,72 +470,80 @@ class CalibrationTab(CTkScrollableFrame):
 
     def calibrate(self):
         # global calib_df
-        CTkMessagebox(title='OnSSET', message='Open the CSV file with extracted GIS data')
+        # CTkMessagebox(title='OnSSET', message='Open the CSV file with extracted GIS data')
 
-        try:
-            onsseter = self.load_csv_data()
-            start_year = int(self.e1.get())
-            start_year_pop = float(self.e2.get())
-            urban_ratio_start_year = float(self.e3.get())
-            elec_rate = float(self.e4.get())
-            elec_rate_urban = float(self.e5.get())
-            elec_rate_rural = float(self.e6.get())
-            min_night_light = float(self.e14.get())
-            min_pop = float(self.e15.get())
-            max_transformer_dist = float(self.e16.get())
-            max_mv_dist = float(self.e17.get())
-            max_hv_dist = float(self.e18.get())
-            hh_size_urban = float(self.e19.get())
-            hh_size_rural = float(self.e20.get())
+        onsseter = self.load_csv_data()
+        cont = False
 
-            # RUN_PARAM: these are the annual household electricity targets
-            tier_1 = 38.7  # 38.7 refers to kWh/household/year. It is the mean value between Tier 1 and Tier 2
-            tier_2 = 219
-            tier_3 = 803
-            tier_4 = 2117
-            tier_5 = 2993
+        if onsseter is not None:
+            try:
+                start_year = int(self.e1.get())
+                start_year_pop = float(self.e2.get())
+                urban_ratio_start_year = float(self.e3.get())
+                elec_rate = float(self.e4.get())
+                elec_rate_urban = float(self.e5.get())
+                elec_rate_rural = float(self.e6.get())
+                min_night_light = float(self.e14.get())
+                min_pop = float(self.e15.get())
+                max_transformer_dist = float(self.e16.get())
+                max_mv_dist = float(self.e17.get())
+                max_hv_dist = float(self.e18.get())
+                hh_size_urban = float(self.e19.get())
+                hh_size_rural = float(self.e20.get())
+                cont = True
+            except:
+                CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
 
-            onsseter.prepare_wtf_tier_columns(hh_size_rural, hh_size_urban,
-                                              tier_1, tier_2, tier_3, tier_4, tier_5)
+        if (onsseter is not None) and cont:
+            try:
+                # RUN_PARAM: these are the annual household electricity targets
+                tier_1 = 38.7  # 38.7 refers to kWh/household/year. It is the mean value between Tier 1 and Tier 2
+                tier_2 = 219
+                tier_3 = 803
+                tier_4 = 2117
+                tier_5 = 2993
 
-            onsseter.condition_df()
+                onsseter.prepare_wtf_tier_columns(hh_size_rural, hh_size_urban,
+                                                  tier_1, tier_2, tier_3, tier_4, tier_5)
 
-            onsseter.df['GridPenalty'] = onsseter.grid_penalties(onsseter.df)
+                onsseter.condition_df()
 
-            onsseter.df['WindCF'] = onsseter.calc_wind_cfs()
+                onsseter.df['GridPenalty'] = onsseter.grid_penalties(onsseter.df)
 
-            onsseter.calibrate_current_pop_and_urban(start_year_pop, urban_ratio_start_year)
+                onsseter.df['WindCF'] = onsseter.calc_wind_cfs()
 
-            elec_modelled, rural_elec_ratio, urban_elec_ratio = \
-                onsseter.elec_current_and_future(elec_rate, elec_rate_urban, elec_rate_rural, start_year,
-                                                 min_night_lights=min_night_light,
-                                                 min_pop=min_pop,
-                                                 max_transformer_dist=max_transformer_dist,
-                                                 max_mv_dist=max_mv_dist,
-                                                 max_hv_dist=max_hv_dist)
-            self.button_save_calib.configure(state='normal')
-            self.calib_df = onsseter.df
+                onsseter.calibrate_current_pop_and_urban(start_year_pop, urban_ratio_start_year)
 
-            urban_pop = onsseter.df.loc[onsseter.df[SET_URBAN] == 2, SET_POP_CALIB].sum()
-            total_pop = onsseter.df[SET_POP_CALIB].sum()
-            urban_pop_ratio = urban_pop / total_pop
+                elec_modelled, rural_elec_ratio, urban_elec_ratio = \
+                    onsseter.elec_current_and_future(elec_rate, elec_rate_urban, elec_rate_rural, start_year,
+                                                     min_night_lights=min_night_light,
+                                                     min_pop=min_pop,
+                                                     max_transformer_dist=max_transformer_dist,
+                                                     max_mv_dist=max_mv_dist,
+                                                     max_hv_dist=max_hv_dist)
+                self.button_save_calib.configure(state='normal')
+                self.calib_df = onsseter.df
 
-            CTkMessagebox(title='OnSSET', width=600,
-                          message='Calibration completed! \n'
-                                  f'The calibrated total electrification rate was {round(elec_modelled, 2)} \n'
-                                  f'The calibrated urban electrification rate was {round(urban_elec_ratio, 2)} \n'
-                                  f'The calibrated rural electrification rate was {round(rural_elec_ratio, 2)} \n'
-                                  f'The calibrated urban ratio was {round(urban_pop_ratio, 2)} \n')
-            self.stop_progress()
-            return onsseter.df
-        # except ValueError:
-        #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
-        except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+                urban_pop = onsseter.df.loc[onsseter.df[SET_URBAN] == 2, SET_POP_CALIB].sum()
+                total_pop = onsseter.df[SET_POP_CALIB].sum()
+                urban_pop_ratio = urban_pop / total_pop
 
-            if msg.get() == 'Display error message':
-                self.error_popup(e)
+                CTkMessagebox(title='OnSSET', width=600,
+                              message='Calibration completed! \n'
+                                      f'The calibrated total electrification rate was {round(elec_modelled, 2)} \n'
+                                      f'The calibrated urban electrification rate was {round(urban_elec_ratio, 2)} \n'
+                                      f'The calibrated rural electrification rate was {round(rural_elec_ratio, 2)} \n'
+                                      f'The calibrated urban ratio was {round(urban_pop_ratio, 2)} \n')
+                self.stop_progress()
+                return onsseter.df
+            # except ValueError:
+            #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
+            except Exception as e:
+                msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                    option_2='Display error message', icon='warning')
+
+                if msg.get() == 'Display error message':
+                    self.error_popup(e)
         self.stop_progress()
 
     def error_popup(self, error):
