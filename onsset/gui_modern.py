@@ -451,7 +451,7 @@ class CalibrationTab(CTkScrollableFrame):
         file_path = self.filename
 
         if self.filename is None:
-            CTkMessagebox(title='Error', message='No CSV file selected', icon="warning")
+            CTkMessagebox(title='Error', message='No CSV file selected. Please try again', icon="warning")
             return None
         elif file_path[-3:] == 'csv':
             try:
@@ -491,8 +491,13 @@ class CalibrationTab(CTkScrollableFrame):
                 hh_size_urban = float(self.e19.get())
                 hh_size_rural = float(self.e20.get())
                 cont = True
-            except:
-                CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
+            except Exception as e:
+                msg = CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables', option_1='Close',
+                                    option_2='Display error message', icon='warning')
+
+                if msg.get() == 'Display error message':
+                    self.error_popup(e)
+                self.stop_progress()
 
         if (onsseter is not None) and cont:
             try:
@@ -616,6 +621,7 @@ class ScenarioTab(CTkScrollableFrame):
         self.df = df
         self.end_year = end_year
         self.create_widgets()
+        self.filename = None
 
     def create_widgets(self):
         # Frame for TreeView
@@ -959,22 +965,30 @@ class ScenarioTab(CTkScrollableFrame):
     def run(self):
         self.start_progress()
 
-        try:
-            self.retrieve_inputs()
-            new_thread = threading.Thread(target=self.run_scenario, daemon=True)
-            new_thread.start()
-        except FileNotFoundError:
-            CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+        cont = False
+
+        if self.filename is None:
+            CTkMessagebox(title='OnSSET', message='No CSV file selected. Please try again', icon='warning')
             self.stop_progress()
-        # except AttributeError:
-        #     CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
-        #     self.stop_progress()
-        # except ValueError:
-        #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
-        #     self.stop_progress()
-        # except:
-        #     CTkMessagebox(title='OnSSET', message='Something went wrong check the error file (TO BE ADDED)', icon='warning')
-        #     self.stop_progress()
+        else:
+            try:
+                self.retrieve_inputs()
+                cont = True
+            except Exception as e:
+                msg = CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables', option_1='Close',
+                                    option_2='Display error message', icon='warning')
+
+                if msg.get() == 'Display error message':
+                    self.error_popup(e)
+                self.stop_progress()
+            if cont:
+                try:
+                    new_thread = threading.Thread(target=self.run_scenario, daemon=True)
+                    new_thread.start()
+                except FileNotFoundError:
+                    CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+                    self.stop_progress()
+
 
     def run_scenario(self):
         try:
@@ -1431,230 +1445,264 @@ class ResultsTab(CTkTabview):
         #self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts',command=lambda: self.vis_charts(self.chart_frame, self.df, 2025, 2030))
         self.load_chart_button.place(rely=0.925, relwidth=0.2, relx=0.4)
 
+    def error_popup(self, error):
+        def save_error(error):
+            path = asksaveasfile(filetypes=[("txt file", ".txt")], defaultextension=".txt")
+
+            # with open(path.name, "w") as f:
+            #     traceback.TracebackException.from_exception(error).print(file=f)
+
+            with open(path.name, 'a') as f:
+                f.write(str(error))
+                f.write(traceback.format_exc())
+
+        popup = CTkToplevel()
+        popup.geometry('600x300')
+        popup.title('Error message')
+        popup.attributes('-topmost', 'true')
+
+        error_frame = CTkTextbox(popup, wrap='none')
+        error_frame.insert("0.0", traceback.format_exc())
+        error_frame.place(relwidth=1, relheight=1)
+
+        save_button = CTkButton(popup, text='Save error message', command=lambda: save_error(error))
+        save_button.place(relx=0.5, rely=0.9, anchor='s')
+
     def scatter_plot(self, map_frame, df, end_year):
-
-        if df.size == 0:
-            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
-        else:
-            if self.background.get() == "Colorful":
-                background = cx.providers.CartoDB.Voyager
-            elif self.background.get() == "Dark":
-                background = cx.providers.CartoDB.DarkMatter
-            elif self.background.get() == "OpenStreetMap":
-                background = cx.providers.OpenStreetMap.Mapnik
+        try:
+            if df.size == 0:
+                CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
             else:
-                background = cx.providers.CartoDB.Positron
+                if self.background.get() == "Colorful":
+                    background = cx.providers.CartoDB.Voyager
+                elif self.background.get() == "Dark":
+                    background = cx.providers.CartoDB.DarkMatter
+                elif self.background.get() == "OpenStreetMap":
+                    background = cx.providers.OpenStreetMap.Mapnik
+                else:
+                    background = cx.providers.CartoDB.Positron
 
-            # Define the EPSG:4326 and EPSG:3857 CRS
-            crs_4326 = pyproj.CRS('EPSG:4326')
-            crs_3857 = pyproj.CRS('EPSG:3857')
+                # Define the EPSG:4326 and EPSG:3857 CRS
+                crs_4326 = pyproj.CRS('EPSG:4326')
+                crs_3857 = pyproj.CRS('EPSG:3857')
 
-            # Create a transformer to convert coordinates
-            transformer = pyproj.Transformer.from_crs(crs_4326, crs_3857, always_xy=True)
+                # Create a transformer to convert coordinates
+                transformer = pyproj.Transformer.from_crs(crs_4326, crs_3857, always_xy=True)
 
-            # Apply the transformation and create new columns
-            # Vectorized transformation using NumPy
-            lon_lat = df[[SET_X_DEG, SET_Y_DEG]].to_numpy()
-            x_3857, y_3857 = transformer.transform(lon_lat[:, 0], lon_lat[:, 1])
+                # Apply the transformation and create new columns
+                # Vectorized transformation using NumPy
+                lon_lat = df[[SET_X_DEG, SET_Y_DEG]].to_numpy()
+                x_3857, y_3857 = transformer.transform(lon_lat[:, 0], lon_lat[:, 1])
 
-            # Add the new columns to the DataFrame
-            df['x_3857'] = x_3857
-            df['y_3857'] = y_3857
+                # Add the new columns to the DataFrame
+                df['x_3857'] = x_3857
+                df['y_3857'] = y_3857
 
-            fig, ax = plt.subplots()
-            fig.set_facecolor("#7f7f7f")
+                fig, ax = plt.subplots()
+                fig.set_facecolor("#7f7f7f")
 
-            fig.set_size_inches(9,9)
+                fig.set_size_inches(9,9)
 
-            colors = {2: '#f67c41',
-                      3: '#ffc700',
-                      4: '#4b0082',
-                      5: '#e628a0',
-                      6: '#1b8f4d',
-                      7: '#28e66d',
-                      99: '#808080',
-                      1: '#4e53de',
-                      }
+                colors = {2: '#f67c41',
+                          3: '#ffc700',
+                          4: '#4b0082',
+                          5: '#e628a0',
+                          6: '#1b8f4d',
+                          7: '#28e66d',
+                          99: '#808080',
+                          1: '#4e53de',
+                          }
 
-            for key in colors.keys():
-                ax.scatter(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'x_3857'],
-                            df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'y_3857'], color=colors[key],
-                            marker='o',
-                            s=(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'Pop2030'] / 100000 * 2))
+                for key in colors.keys():
+                    ax.scatter(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'x_3857'],
+                                df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'y_3857'], color=colors[key],
+                                marker='o',
+                                s=(df.loc[df['FinalElecCode{}'.format(end_year)] == key, 'Pop2030'] / 100000 * 2))
 
-            ax.axis('off')
-            fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
+                ax.axis('off')
+                fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
 
-            try:
-                cx.add_basemap(plt, source=background)
-            except:
-                pass
+                try:
+                    cx.add_basemap(plt, source=background)
+                except:
+                    pass
 
-            canvas = FigureCanvasTkAgg(fig, master=map_frame)
-            canvas.draw()
-            canvas.get_tk_widget().place(relx=0, relwidth=1, relheight=0.9)
+                canvas = FigureCanvasTkAgg(fig, master=map_frame)
+                canvas.draw()
+                canvas.get_tk_widget().place(relx=0, relwidth=1, relheight=0.9)
 
-            self.legend_frame = CTkFrame(map_frame, border_width=5, width=20, height=100, fg_color='#222021')
-            self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
-            self.label_1.grid(row=0, column=0, padx=30, pady=10)
-            self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
-            self.label_2.grid(row=1, column=0, padx=30, pady=10)
-            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
-            self.label_3.grid(row=2, column=0, padx=30, pady=10)
-            self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
-            self.label_4.grid(row=3, column=0, padx=30, pady=10)
-            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
-            self.label_5.grid(row=4, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
-            self.label_6.grid(row=5, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
-            self.label_6.grid(row=6, column=0, padx=30, pady=10)
-            self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
-            self.label_99.grid(row=7, column=0, padx=30, pady=10)
+                self.legend_frame = CTkFrame(map_frame, border_width=5, width=20, height=100, fg_color='#222021')
+                self.legend_frame.place(rely=0.5, relx=1, anchor=E)
+                self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
+                self.label_1.grid(row=0, column=0, padx=30, pady=10)
+                self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+                self.label_2.grid(row=1, column=0, padx=30, pady=10)
+                self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
+                self.label_3.grid(row=2, column=0, padx=30, pady=10)
+                self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+                self.label_4.grid(row=3, column=0, padx=30, pady=10)
+                self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
+                self.label_5.grid(row=4, column=0, padx=30, pady=10)
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
+                self.label_6.grid(row=5, column=0, padx=30, pady=10)
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
+                self.label_6.grid(row=6, column=0, padx=30, pady=10)
+                self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
+                self.label_99.grid(row=7, column=0, padx=30, pady=10)
 
-            try:
-                self.toolbar.destroy()
-            except AttributeError:
-                pass
-            self.toolbar = NavigationToolbar2Tk(canvas, map_frame)
-            self.toolbar.place(rely=0.9, relheight=0.1, relwidth=1)
+                try:
+                    self.toolbar.destroy()
+                except AttributeError:
+                    pass
+                self.toolbar = NavigationToolbar2Tk(canvas, map_frame)
+                self.toolbar.place(rely=0.9, relheight=0.1, relwidth=1)
+        except Exception as e:
+            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                option_2='Display error message', icon='warning')
+
+            if msg.get() == 'Display error message':
+                self.error_popup(e)
 
     def vis_charts(self, frame_charts, df, intermediate_year, end_year):
+        try:
+            if df.size == 0:
+                CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+            else:
+                yearsofanalysis = [intermediate_year, end_year]
 
-        if df.size == 0:
-            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
-        else:
-            yearsofanalysis = [intermediate_year, end_year]
+                techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro"]
+                labels = ["Grid", "Stand-alone Diesel", "Stand-alone PV", "Mini-grid Diesel", "Mini-grid PV", "Mini-grid Wind", "Mini-grid Hydro"]
+                colors = ['#4e53de', '#f67c41', '#ffc700', '#4b0082', '#e628a0', '#1b8f4d', '#28e66d']
 
-            techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro"]
-            labels = ["Grid", "Stand-alone Diesel", "Stand-alone PV", "Mini-grid Diesel", "Mini-grid PV", "Mini-grid Wind", "Mini-grid Hydro"]
-            colors = ['#4e53de', '#f67c41', '#ffc700', '#4b0082', '#e628a0', '#1b8f4d', '#28e66d']
+                elements = []
+                for year in yearsofanalysis:
+                    elements.append("Population{}".format(year))
+                    elements.append("NewConnections{}".format(year))
+                    elements.append("Capacity{}".format(year))
+                    elements.append("Investment{}".format(year))
 
-            elements = []
-            for year in yearsofanalysis:
-                elements.append("Population{}".format(year))
-                elements.append("NewConnections{}".format(year))
-                elements.append("Capacity{}".format(year))
-                elements.append("Investment{}".format(year))
+                sumtechs = []
+                for year in yearsofanalysis:
+                    sumtechs.extend(["Population{}".format(year) + t for t in techs])
+                    sumtechs.extend(["NewConnections{}".format(year) + t for t in techs])
+                    sumtechs.extend(["Capacity{}".format(year) + t for t in techs])
+                    sumtechs.extend(["Investment{}".format(year) + t for t in techs])
 
-            sumtechs = []
-            for year in yearsofanalysis:
-                sumtechs.extend(["Population{}".format(year) + t for t in techs])
-                sumtechs.extend(["NewConnections{}".format(year) + t for t in techs])
-                sumtechs.extend(["Capacity{}".format(year) + t for t in techs])
-                sumtechs.extend(["Investment{}".format(year) + t for t in techs])
+                summary = pd.Series(index=sumtechs, name='country')
 
-            summary = pd.Series(index=sumtechs, name='country')
+                for year in yearsofanalysis:
+                    for t in techs:
+                        summary.loc["Population{}".format(year) + t] = df.loc[
+                            (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)), SET_POP + '{}'.format(
+                                year)].sum() / 1000000
+                        summary.loc["NewConnections{}".format(year) + t] = df.loc[
+                            (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) &
+                            (df[SET_ELEC_FINAL_CODE + '{}'.format(year)] < 99), SET_NEW_CONNECTIONS + '{}'.format(year)].sum() / 1000000
+                        summary.loc["Capacity{}".format(year) + t] = df.loc[(df[SET_MIN_OVERALL + '{}'.format
+                        (year)] == t + '{}'.format(year)) &
+                                                                            (df[SET_ELEC_FINAL_CODE + '{}'.format
+                                                                            (year)] < 99), SET_NEW_CAPACITY + '{}'.format
+                                                                            (year)].sum() / 1000
+                        summary.loc["Investment{}".format(year) + t] = df.loc[
+                            (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) & (
+                                    df[SET_ELEC_FINAL_CODE + '{}'.format
+                                    (year)] < 99), SET_INVESTMENT_COST + '{}'.format(year)].sum()
 
-            for year in yearsofanalysis:
-                for t in techs:
-                    summary.loc["Population{}".format(year) + t] = df.loc[
-                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)), SET_POP + '{}'.format(
-                            year)].sum() / 1000000
-                    summary.loc["NewConnections{}".format(year) + t] = df.loc[
-                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) &
-                        (df[SET_ELEC_FINAL_CODE + '{}'.format(year)] < 99), SET_NEW_CONNECTIONS + '{}'.format(year)].sum() / 1000000
-                    summary.loc["Capacity{}".format(year) + t] = df.loc[(df[SET_MIN_OVERALL + '{}'.format
-                    (year)] == t + '{}'.format(year)) &
-                                                                        (df[SET_ELEC_FINAL_CODE + '{}'.format
-                                                                        (year)] < 99), SET_NEW_CAPACITY + '{}'.format
-                                                                        (year)].sum() / 1000
-                    summary.loc["Investment{}".format(year) + t] = df.loc[
-                        (df[SET_MIN_OVERALL + '{}'.format(year)] == t + '{}'.format(year)) & (
-                                df[SET_ELEC_FINAL_CODE + '{}'.format
-                                (year)] < 99), SET_INVESTMENT_COST + '{}'.format(year)].sum()
+                index = techs + ['Total']
+                columns = []
+                for year in yearsofanalysis:
+                    columns.append("Population{}".format(year))
+                    columns.append("NewConnections{}".format(year))
+                    columns.append("Capacity{} (MW)".format(year))
+                    columns.append("Investment{} (million USD)".format(year))
 
-            index = techs + ['Total']
-            columns = []
-            for year in yearsofanalysis:
-                columns.append("Population{}".format(year))
-                columns.append("NewConnections{}".format(year))
-                columns.append("Capacity{} (MW)".format(year))
-                columns.append("Investment{} (million USD)".format(year))
+                summary_table = pd.DataFrame(index=index, columns=columns)
 
-            summary_table = pd.DataFrame(index=index, columns=columns)
+                summary_table[columns[0]] = summary.iloc[0:7].astype(int).tolist() + [int(summary.iloc[0:7].sum())]
+                summary_table[columns[1]] = summary.iloc[7:14].astype(int).tolist() + [int(summary.iloc[7:14].sum())]
+                summary_table[columns[2]] = summary.iloc[14:21].astype(int).tolist() + [int(summary.iloc[14:21].sum())]
+                summary_table[columns[3]] = [round(x / 1e4) / 1e2 for x in summary.iloc[21:28].astype(float).tolist()] + [
+                    round(summary.iloc[21:28].sum() / 1e4) / 1e2]
+                summary_table[columns[4]] = summary.iloc[28:35].astype(int).tolist() + [int(summary.iloc[28:35].sum())]
+                summary_table[columns[5]] = summary.iloc[35:42].astype(int).tolist() + [int(summary.iloc[35:42].sum())] + summary_table[columns[1]]
+                summary_table[columns[6]] = summary.iloc[42:49].astype(int).tolist() + [int(summary.iloc[42:49].sum())] + summary_table[columns[2]]
+                summary_table[columns[7]] = [round(x / 1e4) / 1e2 for x in summary.iloc[49:56].astype(float).tolist()] + [
+                    round(summary.iloc[49:56].sum() / 1e4) / 1e2] + summary_table[columns[3]]
 
-            summary_table[columns[0]] = summary.iloc[0:7].astype(int).tolist() + [int(summary.iloc[0:7].sum())]
-            summary_table[columns[1]] = summary.iloc[7:14].astype(int).tolist() + [int(summary.iloc[7:14].sum())]
-            summary_table[columns[2]] = summary.iloc[14:21].astype(int).tolist() + [int(summary.iloc[14:21].sum())]
-            summary_table[columns[3]] = [round(x / 1e4) / 1e2 for x in summary.iloc[21:28].astype(float).tolist()] + [
-                round(summary.iloc[21:28].sum() / 1e4) / 1e2]
-            summary_table[columns[4]] = summary.iloc[28:35].astype(int).tolist() + [int(summary.iloc[28:35].sum())]
-            summary_table[columns[5]] = summary.iloc[35:42].astype(int).tolist() + [int(summary.iloc[35:42].sum())] + summary_table[columns[1]]
-            summary_table[columns[6]] = summary.iloc[42:49].astype(int).tolist() + [int(summary.iloc[42:49].sum())] + summary_table[columns[2]]
-            summary_table[columns[7]] = [round(x / 1e4) / 1e2 for x in summary.iloc[49:56].astype(float).tolist()] + [
-                round(summary.iloc[49:56].sum() / 1e4) / 1e2] + summary_table[columns[3]]
+                summary_plot = summary_table.drop(labels='Total', axis=0)
+                fig_size = [10,8]
+                plt.rcParams["figure.figsize"] = fig_size
+                f, axarr = plt.subplots(2, 2)
+                f.set_facecolor("#7f7f7f")
+                f.subplots_adjust(wspace=0.35, hspace=0.35)
 
-            summary_plot = summary_table.drop(labels='Total', axis=0)
-            fig_size = [10,8]
-            plt.rcParams["figure.figsize"] = fig_size
-            f, axarr = plt.subplots(2, 2)
-            f.set_facecolor("#7f7f7f")
-            f.subplots_adjust(wspace=0.35, hspace=0.35)
+                font_size = 8
+                plt.rcParams["figure.figsize"] = fig_size
 
-            font_size = 8
-            plt.rcParams["figure.figsize"] = fig_size
+                sns.barplot(x=summary_plot.index.tolist(), y=columns[4], data=summary_plot, ax=axarr[0, 0], palette=colors)
+                axarr[0, 0].set_ylabel('Population (Million)', fontsize=9)
+                axarr[0, 0].tick_params(labelsize=font_size)
+                axarr[0, 0].set_facecolor('#7f7f7f')
+                axarr[0, 0].set_xticklabels([])
+                axarr[0, 0].yaxis.grid(True)
+                axarr[0, 0].set_axisbelow(True)
+                #axarr[0, 0].grid(True)
+                sns.barplot(x=summary_plot.index.tolist(), y=columns[5], data=summary_plot, ax=axarr[0, 1], palette=colors)
+                axarr[0, 1].set_ylabel('New Connections (Million)', fontsize=9)
+                axarr[0, 1].tick_params(labelsize=font_size)
+                axarr[0, 1].set_facecolor('#7f7f7f')
+                axarr[0, 1].set_xticklabels([])
+                axarr[0, 1].yaxis.grid(True)
+                axarr[0, 1].set_axisbelow(True)
+                sns.barplot(x=summary_plot.index.tolist(), y=columns[6], data=summary_plot, ax=axarr[1, 0], palette=colors)
+                axarr[1, 0].set_ylabel('New capacity (MW)', fontsize=9)
+                axarr[1, 0].tick_params(labelsize=font_size)
+                axarr[1, 0].set_facecolor('#7f7f7f')
+                axarr[1, 0].set_xticklabels([])
+                axarr[1, 0].yaxis.grid(True)
+                axarr[1, 0].set_axisbelow(True)
+                sns.barplot(x=summary_plot.index.tolist(), y=columns[7], data=summary_plot, ax=axarr[1, 1], palette=colors)
+                axarr[1, 1].set_ylabel('Investments (million USD)', fontsize=9)
+                axarr[1, 1].tick_params(labelsize=font_size)
+                axarr[1, 1].set_facecolor('#7f7f7f')
+                axarr[1, 1].set_xticklabels([])
+                axarr[1, 1].yaxis.grid(True)
+                axarr[1, 1].set_axisbelow(True)
 
-            sns.barplot(x=summary_plot.index.tolist(), y=columns[4], data=summary_plot, ax=axarr[0, 0], palette=colors)
-            axarr[0, 0].set_ylabel('Population (Million)', fontsize=9)
-            axarr[0, 0].tick_params(labelsize=font_size)
-            axarr[0, 0].set_facecolor('#7f7f7f')
-            axarr[0, 0].set_xticklabels([])
-            axarr[0, 0].yaxis.grid(True)
-            axarr[0, 0].set_axisbelow(True)
-            #axarr[0, 0].grid(True)
-            sns.barplot(x=summary_plot.index.tolist(), y=columns[5], data=summary_plot, ax=axarr[0, 1], palette=colors)
-            axarr[0, 1].set_ylabel('New Connections (Million)', fontsize=9)
-            axarr[0, 1].tick_params(labelsize=font_size)
-            axarr[0, 1].set_facecolor('#7f7f7f')
-            axarr[0, 1].set_xticklabels([])
-            axarr[0, 1].yaxis.grid(True)
-            axarr[0, 1].set_axisbelow(True)
-            sns.barplot(x=summary_plot.index.tolist(), y=columns[6], data=summary_plot, ax=axarr[1, 0], palette=colors)
-            axarr[1, 0].set_ylabel('New capacity (MW)', fontsize=9)
-            axarr[1, 0].tick_params(labelsize=font_size)
-            axarr[1, 0].set_facecolor('#7f7f7f')
-            axarr[1, 0].set_xticklabels([])
-            axarr[1, 0].yaxis.grid(True)
-            axarr[1, 0].set_axisbelow(True)
-            sns.barplot(x=summary_plot.index.tolist(), y=columns[7], data=summary_plot, ax=axarr[1, 1], palette=colors)
-            axarr[1, 1].set_ylabel('Investments (million USD)', fontsize=9)
-            axarr[1, 1].tick_params(labelsize=font_size)
-            axarr[1, 1].set_facecolor('#7f7f7f')
-            axarr[1, 1].set_xticklabels([])
-            axarr[1, 1].yaxis.grid(True)
-            axarr[1, 1].set_axisbelow(True)
+                canvas = FigureCanvasTkAgg(f, master=frame_charts)
+                canvas.draw()
+                canvas.get_tk_widget().place(relx=0.5, rely=0, relheight=0.9, relwidth=0.8, anchor=N)
+                try:
+                    self.toolbar_2.destroy()
+                except AttributeError:
+                    pass
+                self.toolbar_2 = NavigationToolbar2Tk(canvas, frame_charts)
+                self.toolbar_2.update()
 
-            canvas = FigureCanvasTkAgg(f, master=frame_charts)
-            canvas.draw()
-            canvas.get_tk_widget().place(relx=0.5, rely=0, relheight=0.9, relwidth=0.8, anchor=N)
-            try:
-                self.toolbar_2.destroy()
-            except AttributeError:
-                pass
-            self.toolbar_2 = NavigationToolbar2Tk(canvas, frame_charts)
-            self.toolbar_2.update()
+                self.legend_frame = CTkFrame(frame_charts, border_width=5, width=20, height=100, fg_color='#222021')
+                self.legend_frame.place(rely=0.5, relx=1, anchor=E)
+                self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
+                self.label_1.grid(row=0, column=0, padx=30, pady=10)
+                self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+                self.label_2.grid(row=1, column=0, padx=30, pady=10)
+                self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
+                self.label_3.grid(row=2, column=0, padx=30, pady=10)
+                self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+                self.label_4.grid(row=3, column=0, padx=30, pady=10)
+                self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
+                self.label_5.grid(row=4, column=0, padx=30, pady=10)
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
+                self.label_6.grid(row=5, column=0, padx=30, pady=10)
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
+                self.label_6.grid(row=6, column=0, padx=30, pady=10)
+                # self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
+                # self.label_99.grid(row=5, column=0, padx=30, pady=10)
+        except Exception as e:
+            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
+                                option_2='Display error message', icon='warning')
 
-            self.legend_frame = CTkFrame(frame_charts, border_width=5, width=20, height=100, fg_color='#222021')
-            self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-            self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
-            self.label_1.grid(row=0, column=0, padx=30, pady=10)
-            self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
-            self.label_2.grid(row=1, column=0, padx=30, pady=10)
-            self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
-            self.label_3.grid(row=2, column=0, padx=30, pady=10)
-            self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
-            self.label_4.grid(row=3, column=0, padx=30, pady=10)
-            self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
-            self.label_5.grid(row=4, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
-            self.label_6.grid(row=5, column=0, padx=30, pady=10)
-            self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
-            self.label_6.grid(row=6, column=0, padx=30, pady=10)
-            # self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
-            # self.label_99.grid(row=5, column=0, padx=30, pady=10)
-
+            if msg.get() == 'Display error message':
+                self.error_popup(e)
 
 if __name__ == "__main__":
     app = App()
