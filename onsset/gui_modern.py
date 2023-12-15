@@ -72,8 +72,8 @@ class App(CTk):
 
         # configure window
         self.title("OnSSET - The Open Source Spatial Electrification Tool")
-        self.geometry(f"{1200}x{580}")
-        self.minsize(1100, 580)
+        self.geometry(f"{1400}x{580}")
+        self.minsize(1400, 580)
         #self.iconpath = ImageTk.PhotoImage(file='logo.png')
         #self.wm_iconbitmap()
         #self.iconphoto(False, self.iconpath)
@@ -240,6 +240,43 @@ class CalibrationTab(CTkScrollableFrame):
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
         self.progressbar = progressbar
         self.create_widgets()
+
+    def create_entry_boxes(self, frame_label, info_dict, output_dict, collapsed=True):
+
+        frame = CollapsibleFrame(self, collapsed=collapsed, header_text=frame_label, border_width=5)
+        frame.pack(pady=10, padx=40, fill='x')
+
+        i = 0
+        for key in list(info_dict):
+            if i == 0:
+                y = (10, 0)
+            elif i == len(info_dict) - 1:
+                y = (0, 10)
+            else:
+                y = (0, 0)
+            info = info_dict[key]
+            label = CTkLabel(frame, text=info[0])
+            label.pad_y = y
+            frame.set_content(label, i, 0)
+
+            if type(info[1]) == list:
+                entry = CTkOptionMenu(frame, values=info[1])
+            else:
+                entry = CTkEntry(frame)
+                entry.insert(10, str(info[1]))
+            entry.pad_y = y
+
+            output_dict[key] = entry
+            frame.set_content(entry, i, 1)
+
+            try:
+                description = CTkLabel(frame, text=info[2])
+                description.pad_y = y
+                frame.set_content(description, i, 2)
+            except:
+                pass
+            i += 1
+        return frame
     
     def create_widgets(self):
         # Frame for TreeView
@@ -279,116 +316,45 @@ class CalibrationTab(CTkScrollableFrame):
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
-        self.start_year_frame = CTkFrame(self, border_width=5)
-        self.start_year_frame.pack(pady=10, padx=40, fill='x')
-    
-        l1 = CTkLabel(self.start_year_frame, text="Start year")
-        l1.grid(row=0, column=0, padx=10, pady=(10, 0))
-        self.e1 = CTkEntry(self.start_year_frame)
-        self.e1.grid(row=0, column=1, padx=10, pady=(10, 0))
-        self.e1.insert(10, 2020)
-    
-        l2 = CTkLabel(self.start_year_frame, text="Start year population")
-        l2.grid(row=1, column=0, padx=10)
-        self.e2 = CTkEntry(self.start_year_frame)
-        self.e2.grid(row=1, column=1, padx=10)
-        self.e2.insert(10, "")
-    
-        l3 = CTkLabel(self.start_year_frame, text="Urban ratio (start year)")
-        l3.grid(row=2, column=0, padx=10)
-        self.e3 = CTkEntry(self.start_year_frame)
-        self.e3.grid(row=2, column=1, padx=10)
-    
-        l4 = CTkLabel(self.start_year_frame, text="Total electrification rate (start year)")
-        l4.grid(row=3, column=0, padx=10)
-        self.e4 = CTkEntry(self.start_year_frame)
-        self.e4.grid(row=3, column=1, padx=10)
-    
-        l5 = CTkLabel(self.start_year_frame, text="Urban electrification rate (start year)")
-        l5.grid(row=4, column=0, padx=10)
-        self.e5 = CTkEntry(self.start_year_frame)
-        self.e5.grid(row=4, column=1, padx=10)
-        self.e5.insert(10, "")
-    
-        l6 = CTkLabel(self.start_year_frame, text="Rural electrification rate (start year)")
-        l6.grid(row=5, column=0, padx=10)
-        self.e6 = CTkEntry(self.start_year_frame)
-        self.e6.grid(row=5, column=1, padx=10)
-        self.e6.insert(10, "")
-    
-        l19 = CTkLabel(self.start_year_frame, text="Urban household size")
-        l19.grid(row=6, column=0, padx=10)
-        self.e19 = CTkEntry(self.start_year_frame)
-        self.e19.grid(row=6, column=1, padx=10)
-        self.e19.insert(10, "5")
-    
-        l20 = CTkLabel(self.start_year_frame, text="Rural household size")
-        l20.grid(row=7, column=0, padx=10)
-        self.e20 = CTkEntry(self.start_year_frame)
-        self.e20.grid(row=7, column=1, padx=10, pady=(0,10))
-        self.e20.insert(10, "5")
-    
-        self.calib_text_frame = CTkFrame(self, border_width=5)
-        self.calib_text_frame.pack(pady=10, padx=40, fill='x')
-    
-        l7 = CTkLabel(self.calib_text_frame, text="Calibration of currently electrified settlements")
-        l7.grid(row=0, column=0, sticky='w', padx=10, pady=(10,0))
-    
-        l8 = CTkLabel(self.calib_text_frame,
-                      text="The model calibrates which settlements are likely to be electrified in the start year, to match the national statistical values defined above.")
-        l8.grid(row=1, column=0, sticky='w', padx=10)
-    
-        l13 = CTkLabel(self.calib_text_frame,
-                       text="A settlement is considered to be electrified if it meets all of the following conditions:")
-        l13.grid(row=2, column=0, sticky='w', padx=10)
-    
-        l9 = CTkLabel(self.calib_text_frame,
-                      text="   - Has more night-time lights than the defined threshold (this is set to 0 by default)")
-        l9.grid(row=3, column=0, sticky='w', padx=10)
-    
-        l10 = CTkLabel(self.calib_text_frame,
-                       text="   - Is closer to the existing grid network than the distance limit")
-        l10.grid(row=4, column=0, sticky='w', padx=10)
-    
-        l11 = CTkLabel(self.calib_text_frame, text="   - Has more population than the threshold")
-        l11.grid(row=5, column=0, sticky='w', padx=10)
-    
-        l12 = CTkLabel(self.calib_text_frame,
-                       text="First, define the threshold limits. Then run the calibration and check if the results seem okay. Else, redefine these thresholds and run again.")
-        l12.grid(row=6, column=0, sticky='w', padx=10, pady=(0,10))
-    
-        self.calib_values_frame = CTkFrame(self, border_width=5)
-        self.calib_values_frame.pack(pady=10, padx=40, fill='x')
-    
-        l14 = CTkLabel(self.calib_values_frame, text="Minimum night-time lights")
-        l14.grid(row=0, column=0, padx=10, pady=(10,0))
-        self.e14 = CTkEntry(self.calib_values_frame)
-        self.e14.grid(row=0, column=1, padx=10, pady=(10,0))
-        self.e14.insert(10, "0")
-    
-        l15 = CTkLabel(self.calib_values_frame, text="Minimum population")
-        l15.grid(row=1, column=0, padx=10)
-        self.e15 = CTkEntry(self.calib_values_frame)
-        self.e15.grid(row=1, column=1, padx=10)
-        self.e15.insert(10, "100")
-    
-        l16 = CTkLabel(self.calib_values_frame, text="Max distance to service transformer")
-        l16.grid(row=2, column=0, padx=10)
-        self.e16 = CTkEntry(self.calib_values_frame)
-        self.e16.grid(row=2, column=1, padx=10)
-        self.e16.insert(10, "1")
-    
-        l17 = CTkLabel(self.calib_values_frame, text="Max distance to MV lines")
-        l17.grid(row=3, column=0, padx=10)
-        self.e17 = CTkEntry(self.calib_values_frame)
-        self.e17.grid(row=3, column=1, padx=10)
-        self.e17.insert(10, "2")
-    
-        l18 = CTkLabel(self.calib_values_frame, text="Max distance to HV lines")
-        l18.grid(row=4, column=0, padx=10)
-        self.e18 = CTkEntry(self.calib_values_frame)
-        self.e18.grid(row=4, column=1, padx=10, pady=(0,10))
-        self.e18.insert(10, "25")
+        ### ToDo
+
+        self.general_dict = {
+            'start_year': ["Start year", 2020, 'Write the start year of the analysis'],
+            'start_year_pop': ["Start year population", '', 'Total population in the area at the start of the analysis'],
+            'urban_start_year': ['Urban ratio (start year)', '', 'Share of population (0 - 1) residing in urban areas at the start  year of the analysis'],
+            'elec_ratio': ['Total electrification rate (start year)', '', 'Share of population (0 - 1) in the area with electricity access at the start year of the analysis'],
+            'elec_urban': ['Urban electrification rate (start year)', '', 'Share of urban population (0 - 1) in the area with electricity access at the start year of the analysis'],
+            'elec_rural': ['Urban electrification rate (start year)', '', 'Share of urban population (0 - 1) in the area with electricity access at the start year of the analysis'],
+            'hh_size_urban': ['Urban household size', 5, 'Write the number of people per household in urban areas'],
+            'hh_size_rural': ['Rural household size', 5, 'Write the number of people per household in rural areas']
+        }
+
+        self.general_inputs = {}
+
+        self.create_entry_boxes("General parameters", self.general_dict, self.general_inputs, collapsed=False)
+
+        text = CTkTextbox(self, fg_color="transparent", height=200, border_width=5)
+        text.pack(padx=40, pady=5, fill='x')
+        text.insert("0.0",
+                    "Calibration of currently electrified settlements\n\n"
+                    "The model calibrates which settlements are likely to be electrified in the start year, to match the national statistical values defined above.\n\n"
+                    "A settlement is considered to be electrified if it meets all of the following conditions:\n"
+                    "   - Has more night-time lights than the defined threshold (this is set to 0 by default)\n"
+                    "   - Is closer to the existing grid network than the distance limit\n"
+                    "   - Has more population than the threshold\n\n"
+                    "First, define the threshold limits. Then run the calibration and check if the results seem okay. Else, redefine these thresholds and run again.")
+
+        self.elec_calib_dict = {
+            'min_ntl': ["Minimum night-time lights", 0],
+            'min_pop': ["Minimum population", 100],
+            'max_transf_dist': ["Max distance to service transformer", 1],
+            'max_mv_dist': ["Max distance to MV lines", 2],
+            'max_hv_dist': ["Max distance to HV lines", 25],
+        }
+
+        self.elec_calib_inputs = {}
+
+        self.create_entry_boxes("Current electrification calibration parameters", self.elec_calib_dict, self.elec_calib_inputs, collapsed=False)
     
         self.bottom_frame = CTkFrame(self, height=75, border_width=5)
         self.bottom_frame.pack(fill='x', pady=10, padx=40)
@@ -399,6 +365,42 @@ class CalibrationTab(CTkScrollableFrame):
         self.button_save_calib = CTkButton(self.bottom_frame, text="Save calibrated file", command=self.save_calibrated,
                                            state='disabled')
         self.button_save_calib.place(relx=0.6, rely=0.3)
+
+    def retrieve_calib_inputs(self):
+
+        self.start_year = int(self.general_inputs['start_year'].get())
+        self.start_year_pop = float(self.general_inputs['start_year_pop'].get())
+        self.urban_start_year = float(self.general_inputs['urban_start_year'].get())
+        self.elec_ratio = float(self.general_inputs['elec_ratio'].get())
+        self.elec_urban = float(self.general_inputs['elec_urban'].get())
+        self.elec_rural = float(self.general_inputs['elec_rural'].get())
+        self.hh_size_urban = float(self.general_inputs['hh_size_urban'].get())
+        self.hh_size_rural = float(self.general_inputs['hh_size_rural'].get())
+
+        self.min_ntl = float(self.elec_calib_inputs['min_ntl'].get())
+        self.min_pop = float(self.elec_calib_inputs['min_pop'].get())
+        self.max_transf_dist = float(self.elec_calib_inputs['max_transf_dist'].get())
+        self.max_mv_dist = float(self.elec_calib_inputs['max_mv_dist'].get())
+        self.max_hv_dist = float(self.elec_calib_inputs['max_hv_dist'].get())
+
+    def save_variables(self):
+
+        general_outputs = {}
+        for key in self.general_inputs.keys():
+            info = self.general_dict[key]
+            general_outputs[info[0]] = self.general_inputs[key].get()
+
+        general_outputs = pd.DataFrame(list(general_outputs.items()), columns=['Variable', 'Value'])
+
+        elec_calib_variables = {}
+        for key in self.elec_calib_dict.keys():
+            info = self.elec_calib_dict[key]
+            elec_calib_variables[info[0]] = self.elec_calib_inputs[key].get()
+        elec_calib_variables = pd.DataFrame(list(elec_calib_variables.items()), columns=['Variable', 'Value'])
+
+        variables = pd.concat([general_outputs, elec_calib_variables], ignore_index=True)
+
+        return variables
 
     def csv_File_dialog(self):
         self.filename = filedialog.askopenfilename(title="Select the csv file with GIS data")
@@ -501,19 +503,21 @@ class CalibrationTab(CTkScrollableFrame):
 
         if onsseter is not None:
             try:
-                start_year = int(self.e1.get())
-                start_year_pop = float(self.e2.get())
-                urban_ratio_start_year = float(self.e3.get())
-                elec_rate = float(self.e4.get())
-                elec_rate_urban = float(self.e5.get())
-                elec_rate_rural = float(self.e6.get())
-                min_night_light = float(self.e14.get())
-                min_pop = float(self.e15.get())
-                max_transformer_dist = float(self.e16.get())
-                max_mv_dist = float(self.e17.get())
-                max_hv_dist = float(self.e18.get())
-                hh_size_urban = float(self.e19.get())
-                hh_size_rural = float(self.e20.get())
+                self.retrieve_calib_inputs()
+
+                start_year = self.start_year
+                start_year_pop = self.start_year_pop
+                urban_ratio_start_year = self.urban_start_year
+                elec_rate = self.elec_ratio
+                elec_rate_urban = self.elec_urban
+                elec_rate_rural = self.elec_rural
+                min_night_light = self.min_ntl
+                min_pop = self.min_pop
+                max_transformer_dist = self.max_transf_dist
+                max_mv_dist = self.max_mv_dist
+                max_hv_dist = self.max_hv_dist
+                hh_size_urban = self.hh_size_urban
+                hh_size_rural = self.hh_size_rural
                 cont = True
             except Exception as e:
                 msg = CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables', option_1='Close',
@@ -609,6 +613,12 @@ class CalibrationTab(CTkScrollableFrame):
         def internal_save_calib():
             with open(file.name, 'wb') as f:
                 self.calib_df.to_csv(f, index=False)
+
+            calib_variables = self.save_variables()
+            calib_variables_name = file.name[:-4] + '_variables.csv'
+            with open(calib_variables_name, 'wb') as f:
+                calib_variables.to_csv(f, index=False)
+
             self.stop_progress()
             CTkMessagebox(title='OnSSET', message='Calibrated file saved successfully!')
 
@@ -723,7 +733,7 @@ class ScenarioTab(CTkScrollableFrame):
             return frame
 
         # Define and create general parameters
-        general_dict = {
+        self.general_dict = {
             'start_year': ("Start year", 2020, 'Write the start year of the analysis'), 
             'end_year': ("End year", 2030, 'Write the end year of the analysis'),
             'intermediate_year': ('Intermediate year', 2025),
@@ -742,10 +752,10 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.general_inputs = {}
 
-        create_entry_boxes("General parameters", general_dict, self.general_inputs, collapsed=False)
+        create_entry_boxes("General parameters", self.general_dict, self.general_inputs, collapsed=False)
 
         # Define and create south grid parameters
-        south_grid_dict = {
+        self.south_grid_dict = {
             'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
             'grid_losses': ('Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
             'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
@@ -756,10 +766,10 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.south_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the south grid', south_grid_dict, self.south_grid_inputs)
+        create_entry_boxes('Parameters for the south grid', self.south_grid_dict, self.south_grid_inputs)
 
         # Define and create east grid parameters
-        east_grid_dict = {
+        self.east_grid_dict = {
             'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
             'grid_losses': (
             'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
@@ -771,10 +781,10 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.east_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the east grid', east_grid_dict, self.east_grid_inputs)
+        create_entry_boxes('Parameters for the east grid', self.east_grid_dict, self.east_grid_inputs)
 
         # Define and create west grid parameters
-        west_grid_dict = {
+        self.west_grid_dict = {
             'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
             'grid_losses': (
             'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
@@ -786,9 +796,9 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.west_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the west grid', west_grid_dict, self.west_grid_inputs)
+        create_entry_boxes('Parameters for the west grid', self.west_grid_dict, self.west_grid_inputs)
 
-        standalone_dict = {
+        self.standalone_dict = {
             'sa_cost_1': ('Investment cost (1-20 W)', 9620, 'Stand-alone PV capital cost (USD/kW) for household systems under 20 W'),
             'sa_cost_2': ('Investment cost (21-50 W)', 8780, 'Stand-alone PV capital cost (USD/kW) for household systems between 21-50 W'),
             'sa_cost_3': ('Investment cost (51-100 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 51-100 W'),
@@ -800,9 +810,9 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.standalone_inputs = {}
 
-        create_entry_boxes('Parameters for stand-alone PV', standalone_dict, self.standalone_inputs)
+        create_entry_boxes('Parameters for stand-alone PV', self.standalone_dict, self.standalone_inputs)
 
-        mini_grids_dict = {
+        self.mini_grids_dict = {
             'mg_pv_capital_cost': ('PV mini-grid investment cost', 2950, 'PV mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
             'mg_pv_tech_life': ('PV mini-grid technology life-time', 20, 'Expected techno-economic lifetime of PV mini-grids (years'),
             'mg_pv_om': ('PV mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
@@ -816,9 +826,9 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.mg_inputs = {}
 
-        create_entry_boxes('Parameters for renewable mini-grids', mini_grids_dict, self.mg_inputs)
+        create_entry_boxes('Parameters for renewable mini-grids', self.mini_grids_dict, self.mg_inputs)
 
-        diesel_techs_dict = {
+        self.diesel_techs_dict = {
             'diesel_technologies': ('Include diesel technologies?', ['No', 'Yes'], 'Decide whether to include diesel mini-grids and diesel stand-alone technologies as potential off-grid technologies for new connections'),
             'diesel_fuel': ('Diesel pump price', 1.0, 'USD/liter of diesel fuel (in cities)'),
             'mg_diesel_capital_cost': ('Diesel mini-grid capital cost', 672, 'Diesel mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
@@ -831,9 +841,9 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.diesel_inputs = {}
 
-        create_entry_boxes('Parameters for off-grid diesel technologies', diesel_techs_dict, self.diesel_inputs)
+        create_entry_boxes('Parameters for off-grid diesel technologies', self.diesel_techs_dict, self.diesel_inputs)
 
-        td_dict = {
+        self.td_dict = {
             'hv_line_cost': ('HV line cost', 53000, 'USD/km'),
             'hv_line_voltage': ('HV line voltage', 69, 'kV'),
             'mv_line_cost': ('MV line cost', 15000, 'USD/km'),
@@ -851,7 +861,7 @@ class ScenarioTab(CTkScrollableFrame):
 
         self.td_inputs = {}
 
-        create_entry_boxes('Parameters for transmission and distribution network components', td_dict, self.td_inputs)
+        create_entry_boxes('Parameters for transmission and distribution network components', self.td_dict, self.td_inputs)
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
@@ -864,6 +874,20 @@ class ScenarioTab(CTkScrollableFrame):
         # Save results button
         self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
         self.button_save_results.place(relx=0.6, rely=0.3)
+
+    def save_variables(self, info_dicts,  input_dicts):
+
+        variables = {}
+
+        for info_dict, input_dict in zip(info_dicts, input_dicts):
+
+            for key in info_dict.keys():
+                info = info_dict[key]
+                variables[info[0]] = input_dict[key].get()
+
+        variables = pd.DataFrame(list(variables.items()), columns=['Variable', 'Value'])
+
+        return variables
 
     def retrieve_inputs(self):
 
@@ -1398,8 +1422,23 @@ class ScenarioTab(CTkScrollableFrame):
             if file != None:
                 self.start_progress()
                 self.dispaly_csv_button.configure(state='disabled')
+
+                # Save full results
                 with open(file.name, 'wb') as f:
                     self.df.to_csv(f, index=False)  # ToDo update to save scenarios and additional files
+
+                # Save variables
+                variables = self.save_variables(
+                    info_dicts=[self.general_dict, self.south_grid_dict, self.east_grid_dict, self.west_grid_dict,
+                                self.standalone_dict, self.mini_grids_dict, self.diesel_techs_dict, self.td_dict],
+                    input_dicts=[self.general_inputs, self.south_grid_inputs, self.east_grid_inputs, self.west_grid_inputs,
+                                 self.standalone_inputs, self.mg_inputs, self.diesel_inputs, self.td_inputs]
+                )
+
+                calib_variables_name = file.name[:-4] + '_variables.csv'
+                with open(calib_variables_name, 'wb') as f:
+                    variables.to_csv(f, index=False)
+
                 CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
                 self.dispaly_csv_button.configure(state='normal')
             else:
@@ -1754,6 +1793,7 @@ class ResultsTab(CTkTabview):
 
             if msg.get() == 'Display error message':
                 self.error_popup(e)
+
 
 if __name__ == "__main__":
     app = App()
