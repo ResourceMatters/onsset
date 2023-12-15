@@ -457,6 +457,30 @@ class CalibrationTab(CTkScrollableFrame):
             try:
                 csv_filename = r"{}".format(file_path)
                 onsseter = SettlementProcessor(csv_filename)
+                
+                cols = ['Country', 'Region', 'NightLights', 'Pop', 'id', 'GridCellArea', 'ElecPop', 'WindVel',
+                        'GHI', 'TravelHours', 'Elevation', 'Slope', 'ResidentialDemandTierCustom', 'LandCover',
+                        'SubstationDist', 'CurrentHVLineDist', 'CurrentMVLineDist', 'RoadDist', 'X_deg', 'Y_deg',
+                        'TransformerDist', 'PlannedMVLineDist', 'PlannedHVLineDist', 'HydropowerDist', 'Hydropower',
+                        'HydropowerFID', 'IsUrban', 'PerCapitaDemand',
+                        'HealthDemand', 'EducationDemand', 'AgriDemand',
+                        'ElectrificationOrder', 'Conflict',	'CommercialDemand',	'ResidentialDemandTier1',
+                        'ResidentialDemandTier2', 'ResidentialDemandTier3', 'ResidentialDemandTier4',
+                        'ResidentialDemandTier5',
+                        'hh_dem_low',	'hh_dem_mid', 'hh_dem_high', 'health_dem_low',
+                        'health_dem_mid', 'health_dem_high', 'edu_dem_low',	'edu_dem_mid', 'edu_dem_high', 'prod_dem_low',
+                        'prod_dem_mid', 'prod_dem_high', 'ind_dem_low', 'ind_dem_mid', 'ind_dem_high',	'agri_dem_low',
+                        'agri_dem_mid', 'agri_dem_high']
+
+                df_cols = onsseter.df.columns.tolist()
+                set_a = set(cols)
+                set_b = set(df_cols)
+                result = list(set_a - set_b)
+                result_with_extra_space = ' '.join(map(str, result))  # Join elements with an extra space
+
+                if len(result) > 0:
+                    CTkMessagebox(title='Warning', message=f'The following columns are missing in the CVS file and could cause a problem: {result_with_extra_space}')
+                
                 return onsseter
             except ValueError:
                 CTkMessagebox(title='Error', message="Could not load file", icon="warning")
@@ -583,7 +607,8 @@ class CalibrationTab(CTkScrollableFrame):
 
     def save_calibrated(self):
         def internal_save_calib():
-            self.calib_df.to_csv(file, index=False)
+            with open(file.name, 'wb') as f:
+                self.calib_df.to_csv(f, index=False)
             self.stop_progress()
             CTkMessagebox(title='OnSSET', message='Calibrated file saved successfully!')
 
@@ -995,6 +1020,31 @@ class ScenarioTab(CTkScrollableFrame):
             settlements_in_csv = self.filename
             onsseter = SettlementProcessor(settlements_in_csv)
 
+            cols = ['Country', 'Region', 'NightLights', 'Pop', 'id', 'GridCellArea', 'ElecPop', 'WindVel',
+                    'GHI', 'TravelHours', 'Elevation', 'Slope', 'ResidentialDemandTierCustom', 'LandCover',
+                    'SubstationDist', 'CurrentHVLineDist', 'CurrentMVLineDist', 'RoadDist', 'X_deg', 'Y_deg',
+                    'TransformerDist', 'PlannedMVLineDist', 'PlannedHVLineDist', 'HydropowerDist', 'Hydropower',
+                    'HydropowerFID', 'IsUrban', 'PerCapitaDemand',
+                    'HealthDemand', 'EducationDemand', 'AgriDemand',
+                    'ElectrificationOrder', 'Conflict', 'CommercialDemand', 'ResidentialDemandTier1',
+                    'ResidentialDemandTier2', 'ResidentialDemandTier3', 'ResidentialDemandTier4',
+                    'ResidentialDemandTier5',
+                    'hh_dem_low', 'hh_dem_mid', 'hh_dem_high', 'health_dem_low',
+                    'health_dem_mid', 'health_dem_high', 'edu_dem_low', 'edu_dem_mid', 'edu_dem_high', 'prod_dem_low',
+                    'prod_dem_mid', 'prod_dem_high', 'ind_dem_low', 'ind_dem_mid', 'ind_dem_high', 'agri_dem_low',
+                    'agri_dem_mid', 'agri_dem_high', 'GridPenalty', 'WindCF', 'PopStartYear',
+                    'ElecPopCalib',	'ElecStart', 'GridDistCalibElec', 'FinalElecCode2020']
+
+            df_cols = onsseter.df.columns.tolist()
+            set_a = set(cols)
+            set_b = set(df_cols)
+            result = list(set_a - set_b)
+            result_with_extra_space = ' '.join(map(str, result))  # Join elements with an extra space
+
+            if len(result) > 0:
+                CTkMessagebox(title='Warning',
+                              message=f'The following columns are missing in the CVS file and could cause a problem: {result_with_extra_space}')
+
             onsseter.df['HealthDemand'] = 0
             onsseter.df['EducationDemand'] = 0
             onsseter.df['AgriDemand'] = 0
@@ -1348,7 +1398,8 @@ class ScenarioTab(CTkScrollableFrame):
             if file != None:
                 self.start_progress()
                 self.dispaly_csv_button.configure(state='disabled')
-                self.df.to_csv(file, index=False)  # ToDo update to save scenarios and additional files
+                with open(file.name, 'wb') as f:
+                    self.df.to_csv(f, index=False)  # ToDo update to save scenarios and additional files
                 CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
                 self.dispaly_csv_button.configure(state='normal')
             else:
