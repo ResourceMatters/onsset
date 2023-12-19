@@ -1,4 +1,5 @@
 import threading
+import tkinter
 import traceback
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfile
@@ -107,6 +108,9 @@ class Menu(CTkFrame):
         self.grid(row=0, column=0, rowspan=5, sticky="nsew")
         self.grid_rowconfigure(6, weight=1)
 
+        self.lang_var = StringVar(self)
+        self.lang_var.set('FR')
+
         self.about = about
         self.calib = calib
         self.scenario = scenario
@@ -123,19 +127,20 @@ class Menu(CTkFrame):
         self.sidebar_button_0 = CTkButton(self, text="About", command=self.display_about)
         self.sidebar_button_0.grid(row=1, column=0, padx=20, pady=10)
 
-        self.sidebar_button_1 = CTkButton(self, text='Calibration', command=self.display_calibration)
+        self.sidebar_button_1 = CTkButton(self, text='Calibrer', command=self.display_calibration) # Calibration
         self.sidebar_button_1.grid(row=2, column=0, padx=20, pady=10)
 
-        self.sidebar_button_2 = CTkButton(self, text='Run scenario', command=self.display_scenario)
+        self.sidebar_button_2 = CTkButton(self, text='Scénario d´exécution', command=self.display_scenario) # Run scenario
         self.sidebar_button_2.grid(row=3, column=0, padx=20, pady=10)
 
-        self.sidebar_button_3 = CTkButton(self, text='Visualize results', command=self.display_results)
+        self.sidebar_button_3 = CTkButton(self, text='Visualiser les résultats', command=self.display_results) #
         self.sidebar_button_3.grid(row=4, column=0, padx=20, pady=10)
 
         # self.sidebar_button_4 = CTkButton(self, text='Additional inputs')
         # self.sidebar_button_4.grid(row=5, column=0, padx=20, pady=10)
 
-        self.appearance_mode_label = CTkLabel(self, text="Appearance Mode", anchor="w")
+        #appearance_mode_text = {'EN': "Appearance Mode", 'FR': 'Mode d´apparence'}
+        self.appearance_mode_label = CTkLabel(self, text='Mode d´apparence', anchor="w")
         self.appearance_mode_label.grid(row=7, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = CTkOptionMenu(self, values=["Light", "Dark"],command=self.change_appearance_mode_event)
         self.appearance_mode_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 10))
@@ -145,9 +150,9 @@ class Menu(CTkFrame):
         self.scaling_optionemenu = CTkOptionMenu(self, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
         self.scaling_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 20))
 
-        self.language_label = CTkLabel(self, text="Language", anchor="w")
+        self.language_label = CTkLabel(self, text="Langue", anchor="w") # Language
         self.language_label.grid(row=11, column=0, padx=20, pady=(10, 0))
-        self.language_optionmenu = CTkOptionMenu(self, values=["English", "French"])
+        self.language_optionmenu = CTkOptionMenu(self, values=["FR"], variable=self.lang_var)
         self.language_optionmenu.grid(row=12, column=0, padx=20, pady=(10, 20))
 
         self.appearance_mode_optionemenu.set("Dark")
@@ -197,38 +202,63 @@ class About(CTkScrollableFrame):
         text = CTkTextbox(about_text_frame, fg_color="transparent", height=497)
         text.pack(padx=10, pady=5, fill='x')
         text.insert("0.0",
-                    "About\n\n"
-                    "This interface is used to run electrification analysis for the DRC using the Open " 
-                    "Source Spatial Electrification Tool (OnSSET) in a simple manner.\n" 
-                    "The interface is built on the freely available and open-source OnSSET code version available at "
+                    'À propos\n\n'
+                    # "About\n\n"
+                    
+                    'Cette interface est utilisée pour exécuter une analyse d´électrification pour la RDC à l´aide de '
+                    'l´outil d´électrification spatiale (OnSSET) de manière simple.\n'
+                    #"This interface is used to run electrification analysis for the DRC using the Open " 
+                    #"Source Spatial Electrification Tool (OnSSET) in a simple manner.\n" 
+                    #"The interface is built on the freely available and open-source OnSSET code version available at "
+                    'L´interface est construite sur la version de code OnSSET disponible gratuitement et open source, disponible sur '
                     "https://github.com/ResourceMatters/onsset/tree/gui\n\n"
                     
-                    "The user needs a csv-file with extracted GIS data for the DRC.\n"
-                    "The interface has four separate sections, briefly explained below.\n\n"
+                    "L'utilisateur a besoin d'un fichier CSV avec les données SIG extraites pour la RDC.\n"
+                    "L'interface comporte quatre sections distinctes, brièvement expliquées ci-dessous.\n\n"
+                    #"The user needs a csv-file with extracted GIS data for the DRC.\n"
+                    #"The interface has four separate sections, briefly explained below.\n\n"
                     
-                    "Calibration\n"
-                    "In this section, the user calibrates the data in the csv-file to match national statistics for the start of the analysis.\n"
-                    "This includes total population, urban share of population, and currently electrified settlements.\n\n"
+                    "calibrage du modèle\n"
+                    #"Calibration\n"
+                    "Dans cette section, l'utilisateur calibre les données du fichier CSV pour qu'elles correspondent aux statistiques nationales pour le début de l'analyse.\n"
+                    "Cela comprend la population totale, la part urbaine de la population et les agglomérations actuellement électrifiées.\n\n"
+                    #"In this section, the user calibrates the data in the csv-file to match national statistics for the start of the analysis.\n"
+                    #"This includes total population, urban share of population, and currently electrified settlements.\n\n"
                     
-                    "Scenario\n"
-                    "In this section, the user uses the calibrated file to run least-cost electrification investment scenarios.\n"
-                    "Here, the user can update the key inputs with regards to demand and technology costs.\n\n"
+                    "Scénario\n"
+                    #"Scenario\n"
+                    "Dans cette section, l'utilisateur utilise le fichier calibré pour exécuter des scénarios d'investissement dans l'électrification au moindre coût.\n"
+                    "Ici, l'utilisateur peut mettre à jour les entrées clés en ce qui concerne la demande et les coûts technologiques.\n\n"
+                    #"In this section, the user uses the calibrated file to run least-cost electrification investment scenarios.\n"
+                    #"Here, the user can update the key inputs with regards to demand and technology costs.\n\n"
                     
                     "Visualization\n"
-                    "After running a scenario, the user can quickly visualize and save key results in this section.\n\n"
+                    #"Visualization\n"
+                    "Après avoir exécuté un scénario, l'utilisateur peut rapidement visualiser et enregistrer les résultats clés dans cette section.\n\n"
+                    #"After running a scenario, the user can quickly visualize and save key results in this section.\n\n"
                     
                     # "Additional inputs\n"
                     # "Here the user can update additional inputs for the scenario runs if detailed data is available.\n\n"
                     
-                    "Additional information\n"
-                    " * Note that all inputs in the interface use a dot ( . ) for decimals, not a comma ( , )\n"
-                    " * In case something goes wrong, an error message is displayed, which can also be saved in case you need to contact someone for support.\n"
-                    " * For more information about the Congo Epela project, see https://congoepela.resourcematters.org/\n"
-                    " * For more information about OnSSET and support, see:\n"
-                    "     * The OnSSET documentation: https://onsset.readthedocs.io/\n"
-                    "     * The OnSSET website: https://www.onsset.org/\n"
-                    "     * The OnSSET forum: https://groups.google.com/g/onsset\n"
-                    "     * The freely available online course on OnSSET: https://www.open.edu/openlearncreate/course/view.php?id=11533"
+                    "Informations Complémentaires\n"
+                    " * Notez que toutes les entrées de l'interface utilisent un point ( . ) pour les décimales, pas une virgule ( , )\n"
+                    " * En cas de problème, un message d'erreur s'affiche, qui peut également être enregistré au cas où vous auriez besoin de contacter quelqu'un pour obtenir de l'aide.\n"
+                    " * Pour plus d'informations sur le projet Congo Epela, voir https://congoepela.resourcematters.org/\n"
+                    " * Pour plus d’informations sur OnSSET et l’assistance, consultez:\n"
+                    "     * La documentation OnSSET: https://onsset.readthedocs.io/\n"
+                    "     * Le site OnSSET: https://www.onsset.org/\n"
+                    "     * Le forum OnSSET: https://groups.google.com/g/onsset\n"
+                    "     * Le cours en ligne disponible gratuitement sur OnSSET: https://www.open.edu/openlearncreate/course/view.php?id=11533"
+
+                    # "Additional information\n"
+                    # " * Note that all inputs in the interface use a dot ( . ) for decimals, not a comma ( , )\n"
+                    # " * In case something goes wrong, an error message is displayed, which can also be saved in case you need to contact someone for support.\n"
+                    # " * For more information about the Congo Epela project, see https://congoepela.resourcematters.org/\n"
+                    # " * For more information about OnSSET and support, see:\n"
+                    # "     * The OnSSET documentation: https://onsset.readthedocs.io/\n"
+                    # "     * The OnSSET website: https://www.onsset.org/\n"
+                    # "     * The OnSSET forum: https://groups.google.com/g/onsset\n"
+                    # "     * The freely available online course on OnSSET: https://www.open.edu/openlearncreate/course/view.php?id=11533"
                     )
 
 
@@ -280,7 +310,7 @@ class CalibrationTab(CTkScrollableFrame):
     
     def create_widgets(self):
         # Frame for TreeView
-        treeview_label = CTkLabel(self, text='GIS CSV data')
+        treeview_label = CTkLabel(self, text='Données SIG CSV') # GIS CSV data
         treeview_label.pack(padx=40, fill='x')
         frame1 = CTkFrame(self, height=200, border_width=5)
         # Treeview widget
@@ -304,65 +334,90 @@ class CalibrationTab(CTkScrollableFrame):
         select_csv_frame = CTkFrame(self, height=100, border_width=5)  # , text="Select the calibrated csv file")
         select_csv_frame.pack(pady=10, padx=40, fill='x')
 
-        self.label_file = CTkLabel(select_csv_frame, text="No file selected, click the browse button!")
+        self.label_file = CTkLabel(select_csv_frame, text="Aucun fichier sélectionné, cliquez sur le bouton Parcourir!") # No file selected, click the browse button!
         self.label_file.place(rely=0.05, relx=0.05)
 
         # csv file buttons
-        self.select_csv_button = CTkButton(select_csv_frame, text="Browse a file",
+        self.select_csv_button = CTkButton(select_csv_frame, text="Parcourir un fichier",  # Browse a file
                                            command=lambda: self.csv_File_dialog())
         self.select_csv_button.place(rely=0.4, relx=0.2)
 
-        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Display File",
+        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Afficher le fichier",  # Display File
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
         ### ToDo
 
         self.general_dict = {
-            'start_year': ["Start year", 2020, 'Write the start year of the analysis'],
-            'start_year_pop': ["Start year population", '', 'Total population in the area at the start of the analysis'],
-            'urban_start_year': ['Urban ratio (start year)', '', 'Share of population (0 - 1) residing in urban areas at the start  year of the analysis'],
-            'elec_ratio': ['Total electrification rate (start year)', '', 'Share of population (0 - 1) in the area with electricity access at the start year of the analysis'],
-            'elec_urban': ['Urban electrification rate (start year)', '', 'Share of urban population (0 - 1) in the area with electricity access at the start year of the analysis'],
-            'elec_rural': ['Urban electrification rate (start year)', '', 'Share of urban population (0 - 1) in the area with electricity access at the start year of the analysis'],
-            'hh_size_urban': ['Urban household size', 5, 'Write the number of people per household in urban areas'],
-            'hh_size_rural': ['Rural household size', 5, 'Write the number of people per household in rural areas']
+            'start_year': ["Année de début", 2020, 'Ecrire ´année de début de l´analyse'],
+            # ["Start year", 2020, 'Write the start year of the analysis']
+            'start_year_pop': ["Population de l’année de début", '', 'Population totale de la zone au début de l´analyse'],
+            # ["Start year population", '', 'Total population in the area at the start of the analysis']
+            'urban_start_year': ['Ratio urbain (année de début)', '', 'Part de la population (0 - 1) résidant dans les zones urbaines à l´année de début de l´analyse'],
+            # ['Urban ratio (start year)', '', 'Share of population (0 - 1) residing in urban areas at the start  year of the analysis']
+            'elec_ratio': ['Taux d’électrification total (année de début)', '', 'Part de la population (0 - 1) dans la zone ayant accès à l´électricité au début de l´année de l´analyse'],
+            # ['Total electrification rate (start year)', '', 'Share of population (0 - 1) in the area with electricity access at the start year of the analysis']
+            'elec_urban': ['Taux d´électrification urbaine (année de début)', '', 'Part de la population urbaine (0 - 1) dans la zone ayant accès à l´électricité au début de l´année de l´analyse'],
+            # ['Urban electrification rate (start year)', '', 'Share of urban population (0 - 1) in the area with electricity access at the start year of the analysis']
+            'elec_rural': ['Taux d´électrification rurale (année de début)', '', 'Part de la population rurale (0 - 1) dans la zone ayant accès à l´électricité au début de l´année de l´analyse'],
+            # ['Rural electrification rate (start year)', '', 'Share of rural population (0 - 1) in the area with electricity access at the start year of the analysis']
+            'hh_size_urban': ['Taille des ménages urbains', 5, 'Écrivez le nombre de personnes par ménage dans les zones urbaines'],
+            # ['Urban household size', 5, 'Write the number of people per household in urban areas']
+            'hh_size_rural': ['Taille du ménages rural', 5, 'Écrivez le nombre de personnes par ménage dans les zones rurales']
+            # ['Rural household size', 5, 'Write the number of people per household in rural areas']
         }
 
         self.general_inputs = {}
 
-        self.create_entry_boxes("General parameters", self.general_dict, self.general_inputs, collapsed=False)
+        self.create_entry_boxes("Paramètres généraux", self.general_dict, self.general_inputs, collapsed=False) # General parameters
 
         text = CTkTextbox(self, fg_color="transparent", height=200, border_width=5)
         text.pack(padx=40, pady=5, fill='x')
         text.insert("0.0",
-                    "Calibration of currently electrified settlements\n\n"
-                    "The model calibrates which settlements are likely to be electrified in the start year, to match the national statistical values defined above.\n\n"
-                    "A settlement is considered to be electrified if it meets all of the following conditions:\n"
-                    "   - Has more night-time lights than the defined threshold (this is set to 0 by default)\n"
-                    "   - Is closer to the existing grid network than the distance limit\n"
-                    "   - Has more population than the threshold\n\n"
-                    "First, define the threshold limits. Then run the calibration and check if the results seem okay. Else, redefine these thresholds and run again.")
+                    "Calibrage des colonies actuellement électrifiées\n\n"
+                    "Le modèle calibre les agglomérations susceptibles d'être électrifiées au cours de l'année de démarrage, pour correspondre aux valeurs statistiques nationales définies ci-dessus.\n\n"
+                    "Une agglomération est considérée comme électrifiée si elle remplit toutes les conditions suivantes:\n"
+                    "   - A plus de lumières nocturnes que le seuil défini (celui-ci est réglé à 0 par défaut)\n"
+                    "   - Est plus proche du réseau existant que la limite de distance\n"
+                    "   - A plus de population que le seuil\n\n"
+                    "Tout d’abord, définissez les limites du seuil. Exécutez ensuite l’étalonnage et vérifiez si les résultats semblent corrects. Sinon, redéfinissez ces seuils et recommencez.")
+
+        # text.insert("0.0",
+        #             "Calibration of currently electrified settlements\n\n"
+        #             "The model calibrates which settlements are likely to be electrified in the start year, to match the national statistical values defined above.\n\n"
+        #             "A settlement is considered to be electrified if it meets all of the following conditions:\n"
+        #             "   - Has more night-time lights than the defined threshold (this is set to 0 by default)\n"
+        #             "   - Is closer to the existing grid network than the distance limit\n"
+        #             "   - Has more population than the threshold\n\n"
+        #             "First, define the threshold limits. Then run the calibration and check if the results seem okay. Else, redefine these thresholds and run again.")
 
         self.elec_calib_dict = {
-            'min_ntl': ["Minimum night-time lights", 0],
-            'min_pop': ["Minimum population", 100],
-            'max_transf_dist': ["Max distance to service transformer", 1],
-            'max_mv_dist': ["Max distance to MV lines", 2],
-            'max_hv_dist': ["Max distance to HV lines", 25],
+            'min_ntl': ["Éclairage nocturne minimum", 0],
+            'min_pop': ["Population minimale", 100],
+            'max_transf_dist': ["Distance maximale jusqu'au transformateur de service (km)", 1],
+            'max_mv_dist': ["Distance maximale aux lignes MT (km)", 2],
+            'max_hv_dist': ["Distance maximale aux lignes HT (km)", 25],
         }
+
+        # self.elec_calib_dict = {
+        #     'min_ntl': ["Minimum night-time lights", 0],
+        #     'min_pop': ["Minimum population", 100],
+        #     'max_transf_dist': ["Max distance to service transformer", 1],
+        #     'max_mv_dist': ["Max distance to MV lines", 2],
+        #     'max_hv_dist': ["Max distance to HV lines", 25],
+        # }
 
         self.elec_calib_inputs = {}
 
-        self.create_entry_boxes("Current electrification calibration parameters", self.elec_calib_dict, self.elec_calib_inputs, collapsed=False)
+        self.create_entry_boxes("Paramètres d'étalonnage de l'électrification actuelle", self.elec_calib_dict, self.elec_calib_inputs, collapsed=False) # Current electrification calibration parameters
     
         self.bottom_frame = CTkFrame(self, height=75, border_width=5)
         self.bottom_frame.pack(fill='x', pady=10, padx=40)
     
-        self.button_calib = CTkButton(self.bottom_frame, text="Run calibration", command=lambda: self.run_calibration())
+        self.button_calib = CTkButton(self.bottom_frame, text="Exécuter l'étalonnage", command=lambda: self.run_calibration()) # Run calibration
         self.button_calib.place(relx=0.2, rely=0.3)
     
-        self.button_save_calib = CTkButton(self.bottom_frame, text="Save calibrated file", command=self.save_calibrated,
+        self.button_save_calib = CTkButton(self.bottom_frame, text="Enregistrer le fichier calibré", command=self.save_calibrated, # Save calibrated file
                                            state='disabled')
         self.button_save_calib.place(relx=0.6, rely=0.3)
 
@@ -403,7 +458,7 @@ class CalibrationTab(CTkScrollableFrame):
         return variables
 
     def csv_File_dialog(self):
-        self.filename = filedialog.askopenfilename(title="Select the csv file with GIS data")
+        self.filename = filedialog.askopenfilename(title="Sélectionnez le fichier csv avec les données SIG") # Select the csv file with GIS data
         self.label_file.configure(text=self.filename)
         return None
 
@@ -413,7 +468,7 @@ class CalibrationTab(CTkScrollableFrame):
             csv_filename = r"{}".format(self.filename)
             df = pd.read_csv(csv_filename)
             df = df.sample(n=100)
-            self.label_file.configure(text=self.filename + " opened!")
+            self.label_file.configure(text=self.filename + " ouvert!") # opened
             self.clear_data()
             self.tv1["column"] = list(df.columns)
             self.tv1["show"] = "headings"
@@ -430,16 +485,16 @@ class CalibrationTab(CTkScrollableFrame):
             internal_display_scenario()
             #threading.Thread(target=internal_display_scenario, daemon=True).start()
         except ValueError:
-            CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+            CTkMessagebox(title='Error', message="Impossible de charger le fichier", icon="warning") # Could not load file
         except FileNotFoundError:
-            CTkMessagebox(title='Error', message=f"Could not find the file {self.filename}", icon="warning")
+            CTkMessagebox(title='Error', message=f"Impossible de trouver le fichier {self.filename}", icon="warning") # Could not find the file
         except AttributeError:
-            CTkMessagebox(title='Error', message="No CSV file selected", icon="warning")
+            CTkMessagebox(title='Error', message="Aucun fichier CSV sélectionné", icon="warning") # No CSV file selected
         except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+            msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer', #  An error occured # Close
+                                option_2='Afficher un message d´erreur', icon='warning') # Display error message
 
-            if msg.get() == 'Display error message':
+            if msg.get() == 'Afficher un message d´erreur': #  Display error message
                 self.error_popup(e)
 
         self.stop_progress()
@@ -453,7 +508,7 @@ class CalibrationTab(CTkScrollableFrame):
         file_path = self.filename
 
         if self.filename is None:
-            CTkMessagebox(title='Error', message='No CSV file selected. Please try again', icon="warning")
+            CTkMessagebox(title='Error', message='Aucun fichier CSV sélectionné. Veuillez réessayer', icon="warning") # No CSV file selected. Please try again
             return None
         elif file_path[-3:] == 'csv':
             try:
@@ -481,17 +536,17 @@ class CalibrationTab(CTkScrollableFrame):
                 result_with_extra_space = ' '.join(map(str, result))  # Join elements with an extra space
 
                 if len(result) > 0:
-                    CTkMessagebox(title='Warning', message=f'The following columns are missing in the CVS file and could cause a problem: {result_with_extra_space}')
+                    CTkMessagebox(title='Warning', message=f'Les colonnes suivantes sont manquantes dans le fichier CSV et pourraient poser un problème: {result_with_extra_space}') # The following columns are missing in the CVS file and could cause a problem
                 
                 return onsseter
             except ValueError:
-                CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+                CTkMessagebox(title='Error', message="Impossible de charger le fichier", icon="warning") # Could not load file
                 return None
             except FileNotFoundError:
-                CTkMessagebox(title='Error', message=f"Could not find the file {file_path}", icon="warning")
+                CTkMessagebox(title='Error', message=f"Impossible de trouver le fichier {file_path}", icon="warning") # Could not find the file
                 return None
         else:
-            CTkMessagebox(title='Error', message=f"Only csv files can be used", icon="warning")
+            CTkMessagebox(title='Error', message=f"Seuls les fichiers CSV peuvent être utilisés", icon="warning") # Only csv files can be used
             return None
 
     def calibrate(self):
@@ -520,10 +575,10 @@ class CalibrationTab(CTkScrollableFrame):
                 hh_size_rural = self.hh_size_rural
                 cont = True
             except Exception as e:
-                msg = CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables', option_1='Close',
-                                    option_2='Display error message', icon='warning')
+                msg = CTkMessagebox(title='OnSSET', message='Quelque chose s´est mal passé, vérifiez les variables d´entrée', option_1='Fermer', # Something went wrong, check the input variables # Close
+                                    option_2='Afficher un message d´erreur', icon='warning') # Display error message
 
-                if msg.get() == 'Display error message':
+                if msg.get() == 'Afficher un message d´erreur':
                     self.error_popup(e)
                 self.stop_progress()
 
@@ -562,20 +617,20 @@ class CalibrationTab(CTkScrollableFrame):
                 urban_pop_ratio = urban_pop / total_pop
 
                 CTkMessagebox(title='OnSSET', width=600,
-                              message='Calibration completed! \n'
-                                      f'The calibrated total electrification rate was {round(elec_modelled, 2)} \n'
-                                      f'The calibrated urban electrification rate was {round(urban_elec_ratio, 2)} \n'
-                                      f'The calibrated rural electrification rate was {round(rural_elec_ratio, 2)} \n'
-                                      f'The calibrated urban ratio was {round(urban_pop_ratio, 2)} \n')
+                              message='Calibrage terminé! \n' # Calibration completed
+                                      f'Le taux d’électrification total calibré était {round(elec_modelled, 2)} \n' # The calibrated total electrification rate was
+                                      f'Le taux d’électrification urbaine calibré était {round(urban_elec_ratio, 2)} \n' # The calibrated urban electrification rate was
+                                      f'Le taux d’électrification rurale calibré était {round(rural_elec_ratio, 2)} \n' # The calibrated rural electrification rate was
+                                      f'Le ratio urbain calibré était {round(urban_pop_ratio, 2)} \n') # The calibrated urban ratio was
                 self.stop_progress()
                 return onsseter.df
             # except ValueError:
             #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
             except Exception as e:
-                msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                    option_2='Display error message', icon='warning')
+                msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer', # An error occured # Close
+                                    option_2='Afficher un message d´erreur', icon='warning') # Display error message
 
-                if msg.get() == 'Display error message':
+                if msg.get() == 'Afficher un message d´erreur': # Display error message
                     self.error_popup(e)
         self.stop_progress()
 
@@ -599,7 +654,7 @@ class CalibrationTab(CTkScrollableFrame):
         error_frame.insert("0.0", traceback.format_exc())
         error_frame.place(relwidth=1, relheight=1)
 
-        save_button = CTkButton(popup, text='Save error message', command=lambda: save_error(error))
+        save_button = CTkButton(popup, text='Enregistrer le message d´erreur', command=lambda: save_error(error)) # Save error message
         save_button.place(relx=0.5, rely=0.9, anchor='s')
 
     def run_calibration(self):
@@ -620,7 +675,7 @@ class CalibrationTab(CTkScrollableFrame):
                 calib_variables.to_csv(f, index=False)
 
             self.stop_progress()
-            CTkMessagebox(title='OnSSET', message='Calibrated file saved successfully!')
+            CTkMessagebox(title='OnSSET', message='Fichier calibré enregistré avec succès!') #  Calibrated file saved successfully
 
         self.start_progress()
         file = asksaveasfile(filetypes=[("csv file", ".csv")], defaultextension=".csv")
@@ -660,7 +715,7 @@ class ScenarioTab(CTkScrollableFrame):
 
     def create_widgets(self):
         # Frame for TreeView
-        treeview_label = CTkLabel(self, text='Calibrated CSV data')
+        treeview_label = CTkLabel(self, text='Données CSV calibrées') # Calibrated CSV data
         treeview_label.pack(padx=40, fill='x')
         frame1 = CTkFrame(self, height=200, border_width=5)
         # Treeview widget
@@ -683,15 +738,15 @@ class ScenarioTab(CTkScrollableFrame):
         select_csv_frame = CTkFrame(self, height=100, border_width=5)  # , text="Select the calibrated csv file")
         select_csv_frame.pack(pady=10, padx=40, fill='x')
 
-        self.label_file = CTkLabel(select_csv_frame, text="No file selected, click the browse button!")
+        self.label_file = CTkLabel(select_csv_frame, text="Aucun fichier sélectionné, cliquez sur le bouton Parcourir!")  # No file selected, click the browse button!
         self.label_file.place(rely=0.05, relx=0.05)
 
         # csv file buttons
-        self.select_csv_button = CTkButton(select_csv_frame, text="Browse a file",
+        self.select_csv_button = CTkButton(select_csv_frame, text="Parcourir un fichier",  # Browse a file
                                            command=lambda: self.csv_scenario_File_dialog())
         self.select_csv_button.place(rely=0.4, relx=0.2)
 
-        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Display File",
+        self.dispaly_csv_button = CTkButton(select_csv_frame, text="Afficher le fichier",  # Display File
                                             command=lambda: self.load_scenario_csv_data())
         self.dispaly_csv_button.place(rely=0.4, relx=0.6)
 
@@ -733,146 +788,219 @@ class ScenarioTab(CTkScrollableFrame):
             return frame
 
         # Define and create general parameters
+        # self.general_dict = {
+        #     'start_year': ("Start year", 2020, 'Write the start year of the analysis'),
+        #     'end_year': ("End year", 2030, 'Write the end year of the analysis'),
+        #     'intermediate_year': ('Intermediate year', 2025),
+        #     'elec_target': ('Electrification rate target', 1, 'E.g. 1 for 100% electrification rate or 0.80 for 80% electrification rate'),
+        #     'intermediate_elec_target': ('Electrification rate target (Intermediate year)', 0.75, 'E.g. for a target electrification rate of 75%, enter 0.75'),
+        #     'end_year_pop': ('End year population', "", 'Write the population in the end year of the analysis (e.g. 2030)'),
+        #     'end_year_urban': ("Urban ratio (end year)", "", 'Write the urban population population ratio in the end year (e.g. 2030)'),
+        #     'hh_size_urban': ('Urban household size', 5, 'Write the number of people per household in urban areas'),
+        #     'hh_size_rural': ('Rural household size', 5, 'Write the number of people per household in rural areas'),
+        #     'discount_rate': ('Discount rate', 0.08, 'Write the discount rate'),
+        #     'urban_tier': ("Urban residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+        #     'rural_tier': ("Rural residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+        #     'industrial_demand': ('Industrial demand', ["Low", "Medium", "High"]),
+        #     'other_demand': ('Other demand', ["Low", "Medium", "High"])
+        # }
+
         self.general_dict = {
-            'start_year': ("Start year", 2020, 'Write the start year of the analysis'), 
-            'end_year': ("End year", 2030, 'Write the end year of the analysis'),
-            'intermediate_year': ('Intermediate year', 2025),
-            'elec_target': ('Electrification rate target', 1, 'E.g. 1 for 100% electrification rate or 0.80 for 80% electrification rate'),
-            'intermediate_elec_target': ('Electrification rate target (Intermediate year)', 0.75, 'E.g. for a target electrification rate of 75%, enter 0.75'),
-            'end_year_pop': ('End year population', "", 'Write the population in the end year of the analysis (e.g. 2030)'),
-            'end_year_urban': ("Urban ratio (end year)", "", 'Write the urban population population ratio in the end year (e.g. 2030)'),
-            'hh_size_urban': ('Urban household size', 5, 'Write the number of people per household in urban areas'),
-            'hh_size_rural': ('Rural household size', 5, 'Write the number of people per household in rural areas'),
-            'discount_rate': ('Discount rate', 0.08, 'Write the discount rate'),
-            'urban_tier': ("Urban residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
-            'rural_tier': ("Rural residential demand", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
-            'industrial_demand': ('Industrial demand', ["Low", "Medium", "High"]),
-            'other_demand': ('Other demand', ["Low", "Medium", "High"])
+            'start_year': ("Année de début", 2020, 'Ecrire l´année de début de l´analyse'),
+            'end_year': ("Fin d'année", 2030, 'Ecrire l´année de fin de l´analyse'),
+            'intermediate_year': ('Année intermédiaire', 2025),
+            'elec_target': ('Objectif de taux d’électrification', 1, 'Par exemple. 1 pour un taux d´électrification de 100 % ou 0,80 pour un taux d´électrification de 80 %'),
+            'intermediate_elec_target': ('Objectif de taux d’électrification (Année intermédiaire)', 0.75, 'Par exemple. pour un taux d´électrification cible de 75%, saisir 0.75'),
+            'end_year_pop': ('Population de fin d´année', "", 'Écrivez la population dans la dernière année de l´analyse (par exemple 2030)'),
+            'end_year_urban': ("Ratio urbain (fin d'année)", "", 'Écrivez le ratio de population urbaine à la fin de l´année (par exemple 2030)'),
+            'hh_size_urban': ('Taille des ménages urbains', 5, 'Écrivez le nombre de personnes par ménage dans les zones urbaines'),
+            'hh_size_rural': ('Taille des ménages ruraux', 5, 'Écrivez le nombre de personnes par ménage dans les zones rurales'),
+            'discount_rate': ('Taux de remise', 0.08, 'Écrivez le taux d´actualisation'),
+            'urban_tier': ("Demande résidentielle urbaine", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+            'rural_tier': ("Demande résidentielle rurale", ["Low", "Medium", "High", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]),
+            'industrial_demand': ('Demande industrielle', ["Low", "Medium", "High"]),
+            'other_demand': ('Autre demande', ["Low", "Medium", "High"])
         }
 
         self.general_inputs = {}
 
-        create_entry_boxes("General parameters", self.general_dict, self.general_inputs, collapsed=False)
+        create_entry_boxes("Paramètres généraux", self.general_dict, self.general_inputs, collapsed=False)  # General parameters
 
         # Define and create south grid parameters
+        # self.south_grid_dict = {
+        #     'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
+        #     'grid_losses': ('Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
+        #     'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
+        #     'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year'),
+        #     'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
+        #     'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
+        #                    }
+
         self.south_grid_dict = {
-            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
-            'grid_losses': ('Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
-            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
-            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
-            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
-            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
-                           }
+            'grid_generation_cost': ('Coût de génération du réseau', 0.05, 'Il s´agit du coût de production d´électricité du réseau (USD/kWh).'),
+            'grid_losses': ('Pertes T&D du réseau', 0.05, 'La fraction d´électricité perdue dans le transport et la distribution (pourcentage)'),
+            'grid_capacity_investment_cost': ('Coût d’investissement en capacité du réseau', 2000, 'Le coût en USD/kW pour l´amélioration de la capacité de production du réseau'),
+            'max_connections': ('Nombre maximal de nouvelles connexions au réseau par an', 999999999, 'Il s´agit du nombre maximum de nouveaux foyers pouvant être connectés au réseau en un an.'),
+            'max_capacity': ('Capacité annuelle maximale de production du nouveau réseau (MW)', 999999999,  'Il s’agit de la capacité de production maximale pouvant être ajoutée au réseau en un an (MW)'),
+            'intensification_dist': ('Distance d´intensification', 0, 'Distance tampon (km) du réseau actuel pour une connexion automatique au réseau')
+        }
 
         self.south_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the south grid', self.south_grid_dict, self.south_grid_inputs)
+        create_entry_boxes('Paramètres du réseau électrique sud', self.south_grid_dict, self.south_grid_inputs)  # Parameters for the south grid
 
         # Define and create east grid parameters
         self.east_grid_dict = {
-            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
-            'grid_losses': (
-            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
-            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
-            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
-            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
-            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
-                           }
+            'grid_generation_cost': ('Coût de génération du réseau', 0.05, 'Il s´agit du coût de production d´électricité du réseau (USD/kWh).'),
+            'grid_losses': ('Pertes T&D du réseau', 0.05, 'La fraction d´électricité perdue dans le transport et la distribution (pourcentage)'),
+            'grid_capacity_investment_cost': ('Coût d’investissement en capacité du réseau', 2000, 'Le coût en USD/kW pour l´amélioration de la capacité de production du réseau'),
+            'max_connections': ('Nombre maximal de nouvelles connexions au réseau par an', 999999999, 'Il s´agit du nombre maximum de nouveaux foyers pouvant être connectés au réseau en un an.'),
+            'max_capacity': ('Capacité annuelle maximale de production du nouveau réseau (MW)', 999999999,  'Il s’agit de la capacité de production maximale pouvant être ajoutée au réseau en un an (MW)'),
+            'intensification_dist': ('Distance d´intensification', 0, 'Distance tampon (km) du réseau actuel pour une connexion automatique au réseau')
+        }
 
         self.east_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the east grid', self.east_grid_dict, self.east_grid_inputs)
+        create_entry_boxes('Paramètres du réseau électrique est', self.east_grid_dict, self.east_grid_inputs)  # Parameters for the east grid
 
         # Define and create west grid parameters
         self.west_grid_dict = {
-            'grid_generation_cost': ('Grid generation cost', 0.05, 'This is the grid electricity generation cost (USD/kWh)'),
-            'grid_losses': (
-            'Grid T&D losses', 0.05, 'The fraction of electricity lost in transmission and distribution (percentage)'),
-            'grid_capacity_investment_cost': ('Grid capacity investment cost', 2000, 'The cost in USD/kW for generation capacity upgrades of the grid'),
-            'max_connections': ('Max annual new grid-connections', 999999999, 'This is the maximum amount of new households that can be connected to the grid in one year (thousands)'),
-            'max_capacity': ('Max annual new grid generation capacity (MW)', 999999999, 'This is the maximum generation capacity that can be added to the grid in one year (MW)'),
-            'intensification_dist': ('Intensification distance', 0, 'Buffer distance (km) from the current grid network for automatic connection to the grid')
-                           }
+            'grid_generation_cost': ('Coût de génération du réseau', 0.05, 'Il s´agit du coût de production d´électricité du réseau (USD/kWh).'),
+            'grid_losses': ('Pertes T&D du réseau', 0.05, 'La fraction d´électricité perdue dans le transport et la distribution (pourcentage)'),
+            'grid_capacity_investment_cost': ('Coût d’investissement en capacité du réseau', 2000, 'Le coût en USD/kW pour l´amélioration de la capacité de production du réseau'),
+            'max_connections': ('Nombre maximal de nouvelles connexions au réseau par an', 999999999, 'Il s´agit du nombre maximum de nouveaux foyers pouvant être connectés au réseau en un an.'),
+            'max_capacity': ('Capacité annuelle maximale de production du nouveau réseau (MW)', 999999999,  'Il s’agit de la capacité de production maximale pouvant être ajoutée au réseau en un an (MW)'),
+            'intensification_dist': ('Distance d´intensification', 0, 'Distance tampon (km) du réseau actuel pour une connexion automatique au réseau')
+        }
 
         self.west_grid_inputs = {}
 
-        create_entry_boxes('Parameters for the west grid', self.west_grid_dict, self.west_grid_inputs)
+        create_entry_boxes('Paramètres du réseau électrique ouest', self.west_grid_dict, self.west_grid_inputs)  # Parameters for the west grid
+
+        # self.standalone_dict = {
+        #     'sa_cost_1': ('Investment cost (1-20 W)', 9620, 'Stand-alone PV capital cost (USD/kW) for household systems under 20 W'),
+        #     'sa_cost_2': ('Investment cost (21-50 W)', 8780, 'Stand-alone PV capital cost (USD/kW) for household systems between 21-50 W'),
+        #     'sa_cost_3': ('Investment cost (51-100 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 51-100 W'),
+        #     'sa_cost_4': ('Investment cost (101-1000 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 101-1000 W'),
+        #     'sa_cost_5': ('Investment cost (>1 kW)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems over 1 kW'),
+        #     'sa_pv_tech_life': ('Stand-alone PV technology life-time', 25, 'Expected techno-economic lifetime of stand-alone PV systems (years)'),
+        #     'sa_pv_om': ('Stand-alone PV O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)')
+        # }
 
         self.standalone_dict = {
-            'sa_cost_1': ('Investment cost (1-20 W)', 9620, 'Stand-alone PV capital cost (USD/kW) for household systems under 20 W'),
-            'sa_cost_2': ('Investment cost (21-50 W)', 8780, 'Stand-alone PV capital cost (USD/kW) for household systems between 21-50 W'),
-            'sa_cost_3': ('Investment cost (51-100 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 51-100 W'),
-            'sa_cost_4': ('Investment cost (101-1000 W)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems between 101-1000 W'),
-            'sa_cost_5': ('Investment cost (>1 kW)', 6380, 'Stand-alone PV capital cost (USD/kW) for household systems over 1 kW'),
-            'sa_pv_tech_life': ('Stand-alone PV technology life-time', 25, 'Expected techno-economic lifetime of stand-alone PV systems (years)'),
-            'sa_pv_om': ('Stand-alone PV O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)')
+            'sa_cost_1': ('Coût d´investissement (1-20 W)', 9620, 'Coût d´investissement du PV autonome (USD/kW) pour les systèmes domestiques de moins de 20 W'),
+            'sa_cost_2': ('Coût d´investissement (21-50 W)', 8780, 'Coût d´investissement photovoltaïque autonome (USD/kW) pour les systèmes domestiques compris entre 21 et 50 W'),
+            'sa_cost_3': ('Coût d´investissement (51-100 W)', 6380, 'Coût d´investissement photovoltaïque autonome (USD/kW) pour les systèmes domestiques compris entre 51 et 100 W'),
+            'sa_cost_4': ('Coût d´investissement (101-1000 W)', 6380, 'Coût d´investissement photovoltaïque autonome (USD/kW) pour les systèmes domestiques compris entre 101 et 1 000 W'),
+            'sa_cost_5': ('Coût d´investissement (>1 kW)', 6380, 'Coût d´investissement photovoltaïque autonome (USD/kW) pour les systèmes domestiques de plus de 1 kW'),
+            'sa_pv_tech_life': ('Durée de vie de la technologie photovoltaïque autonome', 25, 'Durée de vie technico-économique attendue des systèmes photovoltaïques autonomes (années)'),
+            'sa_pv_om': ('Coûts d´exploitation et de maintenance du PV autonome', 0.02, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)')
         }
 
         self.standalone_inputs = {}
 
-        create_entry_boxes('Parameters for stand-alone PV', self.standalone_dict, self.standalone_inputs)
+        create_entry_boxes('Paramètres pour le PV autonome', self.standalone_dict, self.standalone_inputs)  # Parameters for stand-alone PV
+
+        # self.mini_grids_dict = {
+        #     'mg_pv_capital_cost': ('PV mini-grid investment cost', 2950, 'PV mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
+        #     'mg_pv_tech_life': ('PV mini-grid technology life-time', 20, 'Expected techno-economic lifetime of PV mini-grids (years)'),
+        #     'mg_pv_om': ('PV mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        #     'mg_wind_capital_cost': ('Wind mini-grid investment cost', 3750, 'Wind mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
+        #     'mg_wind_tech_life': ('Wind mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Wind mini-grids (years)'),
+        #     'mg_wind_om': ('Wind mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        #     'mg_hydro_capital_cost': ('Hydro mini-grid investment cost', 3000, 'Hydro mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
+        #     'mg_hydro_tech_life': ('Hydro mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Hydro mini-grids (years)'),
+        #     'mg_hydro_om': ('Hydro mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        # }
 
         self.mini_grids_dict = {
-            'mg_pv_capital_cost': ('PV mini-grid investment cost', 2950, 'PV mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
-            'mg_pv_tech_life': ('PV mini-grid technology life-time', 20, 'Expected techno-economic lifetime of PV mini-grids (years'),
-            'mg_pv_om': ('PV mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
-            'mg_wind_capital_cost': ('Wind mini-grid investment cost', 3750, 'Wind mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
-            'mg_wind_tech_life': ('Wind mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Wind mini-grids (years'),
-            'mg_wind_om': ('Wind mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
-            'mg_hydro_capital_cost': ('Hydro mini-grid investment cost', 3000, 'Hydro mini-grid  capital cost (USD/kW) as expected in the years of the analysis'),
-            'mg_hydro_tech_life': ('Hydro mini-grid technology life-time', 20, 'Expected techno-economic lifetime of Hydro mini-grids (years'),
-            'mg_hydro_om': ('Hydro mini-grid O&M costs', 0.02, 'Annual operation and maintenance costs (share of investment cost per year)'),
+            'mg_pv_capital_cost': ('Coût d’investissement dans un mini-réseau photovoltaïque', 2950, 'Coût d’investissement du mini-réseau photovoltaïque (USD/kW) comme prévu au cours des années de l’analyse'),
+            'mg_pv_tech_life': ('Durée de vie de la technologie des mini-réseaux photovoltaïques', 20, 'Durée de vie technico-économique attendue des mini-réseaux photovoltaïques (années)'),
+            'mg_pv_om': ('Coûts d´exploitation et d´entretien du mini-réseau photovoltaïque', 0.02, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)'),
+            'mg_wind_capital_cost': ('Coût d’investissement dans un mini-réseau éolien', 3750, 'Coût d’investissement du mini-réseau éolien (USD/kW) comme prévu au cours des années de l’analyse'),
+            'mg_wind_tech_life': ('Durée de vie de la technologie des mini-réseaux éoliens', 20, 'Expected techno-economic lifetime of Wind mini-grids (years)'),
+            'mg_wind_om': ('Coûts d’exploitation et d’entretien des mini-réseaux éoliens', 0.02, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)'),
+            'mg_hydro_capital_cost': ('Coût d’investissement dans un mini-réseau hydroélectrique', 3000, 'Coût d’investissement du mini-réseau hydroélectrique (USD/kW) comme prévu au cours des années de l’analyse'),
+            'mg_hydro_tech_life': ('Durée de vie de la technologie des mini-réseaux hydroélectriques', 20, 'Durée de vie technico-économique attendue des mini-réseaux hydroélectriques (années)'),
+            'mg_hydro_om': ('Coûts d’exploitation et d’entretien du mini-réseau hydroélectrique', 0.02, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)'),
         }
 
         self.mg_inputs = {}
 
-        create_entry_boxes('Parameters for renewable mini-grids', self.mini_grids_dict, self.mg_inputs)
+        create_entry_boxes('Paramètres pour les mini-réseaux renouvelables', self.mini_grids_dict, self.mg_inputs)  # Parameters for renewable mini-grids
+
+        # self.diesel_techs_dict = {
+        #     'diesel_technologies': ('Include diesel technologies?', ['No', 'Yes'], 'Decide whether to include diesel mini-grids and diesel stand-alone technologies as potential off-grid technologies for new connections'),
+        #     'diesel_fuel': ('Diesel pump price', 1.0, 'USD/liter of diesel fuel (in cities)'),
+        #     'mg_diesel_capital_cost': ('Diesel mini-grid capital cost', 672, 'Diesel mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
+        #     'mg_diesel_tech_life': ('Diesel mini-grid technology life-time', 15, 'Expected techno-economic lifetime of diesel mini-grids (years'),
+        #     'mg_diesel_om': ('Diesel mini-grid O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        #     'sa_diesel_capital_cost': ('Diesel stand-alone capital cost', 814, 'Diesel stand-alone capital cost (USD/kW) as expected in the years of the analysis'),
+        #     'sa_diesel_tech_life': ('Diesel stand-alone technology life-time', 10, 'Expected techno-economic lifetime of diesel stand-alone (years'),
+        #     'sa_diesel_om': ('Diesel stand-alone O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
+        # }
 
         self.diesel_techs_dict = {
-            'diesel_technologies': ('Include diesel technologies?', ['No', 'Yes'], 'Decide whether to include diesel mini-grids and diesel stand-alone technologies as potential off-grid technologies for new connections'),
-            'diesel_fuel': ('Diesel pump price', 1.0, 'USD/liter of diesel fuel (in cities)'),
-            'mg_diesel_capital_cost': ('Diesel mini-grid capital cost', 672, 'Diesel mini-grid capital cost (USD/kW) as expected in the years of the analysis'),
-            'mg_diesel_tech_life': ('Diesel mini-grid technology life-time', 15, 'Expected techno-economic lifetime of diesel mini-grids (years'),
-            'mg_diesel_om': ('Diesel mini-grid O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
-            'sa_diesel_capital_cost': ('Diesel stand-alone capital cost', 814, 'Diesel stand-alone capital cost (USD/kW) as expected in the years of the analysis'),
-            'sa_diesel_tech_life': ('Diesel stand-alone technology life-time', 10, 'Expected techno-economic lifetime of diesel stand-alone (years'),
-            'sa_diesel_om': ('Diesel stand-alone O&M costs', 0.10, 'Annual operation and maintenance costs (share of investment cost per year)'),
+            'diesel_technologies': ('Inclure les technologies diesel?', ['No', 'Yes'], 'Décider s’il convient d’inclure les mini-réseaux diesel et les technologies diesel autonomes comme technologies hors réseau potentielles pour de nouvelles connexions?'),
+            'diesel_fuel': ('Prix à la pompe diesel', 1.0, 'USD/litre de carburant diesel (dans les villes)'),
+            'mg_diesel_capital_cost': ('Coût d’investissement du mini-réseau diesel', 672, 'Coût d’investissement du mini-réseau diesel (USD/kW) comme prévu au cours des années de l’analyse'),
+            'mg_diesel_tech_life': ('Durée de vie de la technologie des mini-réseaux diesel', 15, 'Durée de vie technico-économique attendue des mini-réseaux diesel (années)'),
+            'mg_diesel_om': ('Coûts d’exploitation et d’entretien des mini-réseaux diesel', 0.10, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)'),
+            'sa_diesel_capital_cost': ('Coût en capital autonome du diesel', 814, 'Coût d’investissement autonome du diesel (USD/kW), comme prévu au cours des années de l’analyse'),
+            'sa_diesel_tech_life': ('Durée de vie de la technologie autonome diesel', 10, 'Durée de vie technico-économique attendue du diesel autonome (années)'),
+            'sa_diesel_om': ('Coûts d’exploitation et d’entretien du diesel autonome', 0.10, 'Coûts annuels d’exploitation et de maintenance (part du coût d’investissement par an)'),
         }
 
         self.diesel_inputs = {}
 
-        create_entry_boxes('Parameters for off-grid diesel technologies', self.diesel_techs_dict, self.diesel_inputs)
+        create_entry_boxes('Paramètres pour les technologies diesel hors réseau', self.diesel_techs_dict, self.diesel_inputs)  # Parameters for off-grid diesel technologies
+
+        # self.td_dict = {
+        #     'hv_line_cost': ('HV line cost', 53000, 'USD/km'),
+        #     'hv_line_voltage': ('HV line voltage', 69, 'kV'),
+        #     'mv_line_cost': ('MV line cost', 15000, 'USD/km'),
+        #     'mv_line_voltage': ('MV line voltage', 33, 'kV'),
+        #     'max_mv_line_dist': ('Max MV line dist', 50, 'The maximum length of an MV line (km)'),
+        #     'lv_line_cost': ('LV line cost', 7000, 'USD/km'),
+        #     'lv_line_voltage': ('LV line voltage', 0.24, 'kV'),
+        #     'max_lv_line_dist': ('Max LV line dist', 0.5, 'The maximum length of an LV line (km)'),
+        #     'dist_transformer_type': ('Distribution transformer capacity', 50, 'kVA'),
+        #     'dist_transformer_cost': ('Distribution transformer cost', 4250, 'USD/unit'),
+        #     'mg_distribution_losses': ('Mini-grid distribution losses', 0.05, 'Losses in mini-grid distribution networks'),
+        #     'mg_hh_connection_cost': ('Mini-grid household connection cost', 100, 'Household connection cost (USD/household) to mini-grid distribution networks'),
+        #     'grid_hh_connection_cost': ('Grid household connection cost', 150, 'Household connection cost (USD/household) to centralized grid distribution networks')
+        # }
 
         self.td_dict = {
-            'hv_line_cost': ('HV line cost', 53000, 'USD/km'),
-            'hv_line_voltage': ('HV line voltage', 69, 'kV'),
-            'mv_line_cost': ('MV line cost', 15000, 'USD/km'),
-            'mv_line_voltage': ('MV line voltage', 33, 'kV'),
-            'max_mv_line_dist': ('Max MV line dist', 50, 'The maximum length of an MV line (km)'),
-            'lv_line_cost': ('LV line cost', 7000, 'USD/km'),
-            'lv_line_voltage': ('LV line voltage', 0.24, 'kV'),
-            'max_lv_line_dist': ('Max MV line dist', 0.5, 'The maximum length of an LV line (km)'),
-            'dist_transformer_type': ('Distribution transformer capacity', 50, 'kVA'),
-            'dist_transformer_cost': ('Distribution transformer cost', 4250, 'USD/unit'),
-            'mg_distribution_losses': ('Mini-grid distribution losses', 0.05, 'Losses in mini-grid distribution networks'),
-            'mg_hh_connection_cost': ('Mini-grid household connection cost', 100, 'Household connection cost (USD/household) to mini-grid distribution networks'),
-            'grid_hh_connection_cost': ('Grid household connection cost', 150, 'Household connection cost (USD/household) to centralized grid distribution networks')
+            'hv_line_cost': ('Coût de la ligne HT', 53000, 'USD/km'),
+            'hv_line_voltage': ('Tension de ligne HT', 69, 'kV'),
+            'mv_line_cost': ('Coût de la ligne MT', 15000, 'USD/km'),
+            'mv_line_voltage': ('Tension de ligne MT', 33, 'kV'),
+            'max_mv_line_dist': ('Distance maximale de la ligne MT', 50, 'La longueur maximale d´une ligne MT (km)'),
+            'lv_line_cost': ('Coût ligne BT', 7000, 'USD/km'),
+            'lv_line_voltage': ('Tension de ligne BT', 0.24, 'kV'),
+            'max_lv_line_dist': ('Distance maximale de la ligne BT', 0.5, 'La longueur maximale d´une ligne BT (km)'),
+            'dist_transformer_type': ('Capacité du transformateur de distribution', 50, 'kVA'),
+            'dist_transformer_cost': ('Coût du transformateur de distribution', 4250, 'USD/unit'),
+            'mg_distribution_losses': ('Pertes de distribution des mini-réseaux', 0.05, 'Pertes dans les réseaux de distribution de mini-réseaux'),
+            'mg_hh_connection_cost': ('Coût de raccordement des ménages au mini-réseau', 100, 'Coût de raccordement des ménages (USD/ménage) aux réseaux de distribution des mini-réseaux'),
+            'grid_hh_connection_cost': ('Coût de connexion des ménages au réseau', 150, 'Coût de raccordement des ménages (USD/ménage) aux réseaux de distribution centralisés')
         }
 
         self.td_inputs = {}
 
-        create_entry_boxes('Parameters for transmission and distribution network components', self.td_dict, self.td_inputs)
+        create_entry_boxes('Paramètres des composants des réseaux de transport et de distribution', self.td_dict, self.td_inputs)  # Parameters for transmission and distribution network components
 
         # Bottom Frame for running and saving scenario
         bottom_frame = CTkFrame(self, height=75, border_width=5)
         bottom_frame.pack(fill='x', pady=20, padx=40)
 
         # Run scenario button
-        self.run_button = CTkButton(bottom_frame, text="Run scenario", command=lambda: self.run())
+        self.run_button = CTkButton(bottom_frame, text="Exécuter le scénario", command=lambda: self.run())  # Run scenario
         self.run_button.place(relx=0.2, rely=0.3)
 
         # Save results button
-        self.button_save_results = CTkButton(bottom_frame, text="Save result files", command=lambda: self.save_results(), state='disabled')
+        self.button_save_results = CTkButton(bottom_frame, text="Enregistrer les fichiers de résultats", command=lambda: self.save_results(), state='disabled')  # Save result files
         self.button_save_results.place(relx=0.6, rely=0.3)
 
     def save_variables(self, info_dicts,  input_dicts):
@@ -1008,7 +1136,7 @@ class ScenarioTab(CTkScrollableFrame):
         error_frame.insert("0.0", traceback.format_exc())
         error_frame.place(relwidth=1, relheight=1)
 
-        save_button = CTkButton(popup, text='Save error message', command=lambda: save_error(error))
+        save_button = CTkButton(popup, text='Enregistrer le message d´erreur', command=lambda: save_error(error))  # Save error message
         save_button.place(relx=0.5, rely=0.9, anchor='s')
 
     def run(self):
@@ -1017,17 +1145,17 @@ class ScenarioTab(CTkScrollableFrame):
         cont = False
 
         if self.filename is None:
-            CTkMessagebox(title='OnSSET', message='No CSV file selected. Please try again', icon='warning')
+            CTkMessagebox(title='OnSSET', message='Aucun fichier CSV sélectionné. Veuillez réessayer', icon='warning')  # No CSV file selected. Please try again
             self.stop_progress()
         else:
             try:
                 self.retrieve_inputs()
                 cont = True
             except Exception as e:
-                msg = CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables', option_1='Close',
-                                    option_2='Display error message', icon='warning')
+                msg = CTkMessagebox(title='OnSSET', message='Quelque chose s´est mal passé, vérifiez les variables d´entrée', option_1='Fermer',  # Something went wrong, check the input variables # Close
+                                    option_2='Afficher un message d´erreur', icon='warning')  # Display error message
 
-                if msg.get() == 'Display error message':
+                if msg.get() == 'Afficher un message d´erreur':  # 'Display error message':
                     self.error_popup(e)
                 self.stop_progress()
             if cont:
@@ -1035,7 +1163,7 @@ class ScenarioTab(CTkScrollableFrame):
                     new_thread = threading.Thread(target=self.run_scenario, daemon=True)
                     new_thread.start()
                 except FileNotFoundError:
-                    CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+                    CTkMessagebox(title='OnSSET', message='Aucun fichier csv sélectionné, parcourir un fichier', icon='warning')  # No csv file selected, browse a file
                     self.stop_progress()
 
 
@@ -1067,7 +1195,7 @@ class ScenarioTab(CTkScrollableFrame):
 
             if len(result) > 0:
                 CTkMessagebox(title='Warning',
-                              message=f'The following columns are missing in the CVS file and could cause a problem: {result_with_extra_space}')
+                              message=f'Les colonnes suivantes sont manquantes dans le fichier CVS et pourraient poser un problème: {result_with_extra_space}')  # The following columns are missing in the CVS file and could cause a problem
 
             onsseter.df['HealthDemand'] = 0
             onsseter.df['EducationDemand'] = 0
@@ -1314,7 +1442,7 @@ class ScenarioTab(CTkScrollableFrame):
 
                 for grid, grid_calc, auto_intensification in zip(grids, grid_calcs, auto_intensifications):
                     grid_cap_gen_limit = time_step * annual_grid_cap_gen_limit[grid] * 1000
-                    grid_connect_limit = time_step * annual_new_grid_connections_limit[grid] * 1000
+                    grid_connect_limit = time_step * annual_new_grid_connections_limit[grid]
 
                     grid_investment, grid_cap_gen_limit, grid_connect_limit = \
                         onsseter.pre_electrification(grid_calc.grid_price, year, time_step, end_year, grid_calc,
@@ -1394,13 +1522,16 @@ class ScenarioTab(CTkScrollableFrame):
                     onsseter.df.iloc[:, i] = pd.to_numeric(onsseter.df.iloc[:, i], downcast='signed')
 
             self.df = onsseter.df
-            CTkMessagebox(title='OnSSET', message='Scenario run finished!')
+
+            self.summary_table = onsseter.calc_drc_summaries(yearsofanalysis)
+
+            CTkMessagebox(title='OnSSET', message='Exécution du scénario terminée!')  # Scenario run finished!
             self.button_save_results.configure(state='normal')
             self.run_button.configure(state='normal')
             self.dispaly_csv_button.configure(state='normal')
             self.progressbar.grid_forget()
         except FileNotFoundError:
-            CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
+            CTkMessagebox(title='OnSSET', message='Aucun fichier csv sélectionné, parcourir un fichier', icon='warning')  # No csv file selected, browse a file
             self.stop_progress()
         # except AttributeError:
         #     CTkMessagebox(title='OnSSET', message='No csv file selected, Browse a file', icon='warning')
@@ -1409,10 +1540,10 @@ class ScenarioTab(CTkScrollableFrame):
         #     CTkMessagebox(title='OnSSET', message='Something went wrong, check the input variables!', icon='warning')
         #     self.stop_progress()
         except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+            msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer',  # An error occured # Close
+                                option_2='Afficher un message d´erreur', icon='warning')  # Display error message
 
-            if msg.get() == 'Display error message':
+            if msg.get() == 'Afficher un message d´erreur':  # 'Display error message':
                 self.error_popup(e)
             self.stop_progress()
 
@@ -1439,19 +1570,24 @@ class ScenarioTab(CTkScrollableFrame):
                 with open(calib_variables_name, 'wb') as f:
                     variables.to_csv(f, index=False)
 
-                CTkMessagebox(title='OnSSET', message='Result files saved successfully!')
+                # Save summaries
+                summaries_name = file.name[:-4] + '_summary.csv'
+                with open(summaries_name, 'wb') as f:
+                    self.summary_table.to_csv(f, index=True)
+
+                CTkMessagebox(title='OnSSET', message='Fichiers de résultats enregistrés avec succès!')  # Result files saved successfully!
                 self.dispaly_csv_button.configure(state='normal')
             else:
-                CTkMessagebox(title='OnSSET', message='No results saved')
+                CTkMessagebox(title='OnSSET', message='Aucun résultat enregistré')  # No results saved
             self.stop_progress()
 
         if self.df.size == 0:
-            CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+            CTkMessagebox(title='OnSSET', message='Aucun résultat à afficher, exécutez d´abord un scénario', icon='warning')  #  No results to display, first run a scenario
         else:
             threading.Thread(target=save_results_internal, args=(), daemon=True).start()
 
     def csv_scenario_File_dialog(self):
-        self.filename = filedialog.askopenfilename(title="Select the calibrated csv file with GIS data")
+        self.filename = filedialog.askopenfilename(title="Sélectionnez le fichier csv calibré avec les données SIG")  # Select the calibrated csv file with GIS data
         self.label_file.configure(text=self.filename)
         return None
 
@@ -1461,7 +1597,7 @@ class ScenarioTab(CTkScrollableFrame):
             csv_filename = r"{}".format(self.filename)
             df = pd.read_csv(csv_filename)
             df = df.sample(n=100)
-            self.label_file.configure(text=self.filename + " opened!")
+            self.label_file.configure(text=self.filename + " ouvert!")  # opened
             self.clear_data()
             self.tv1["column"] = list(df.columns)
             self.tv1["show"] = "headings"
@@ -1476,18 +1612,17 @@ class ScenarioTab(CTkScrollableFrame):
         self.button_save_results.configure(state='disabled')
         try:
             internal_display_scenario()
-            #threading.Thread(target=internal_display_scenario, daemon=True).start()
         except ValueError:
-            CTkMessagebox(title='Error', message="Could not load file", icon="warning")
+            CTkMessagebox(title='Error', message="Impossible de charger le fichier", icon="warning")  # Could not load file
         except FileNotFoundError:
-            CTkMessagebox(title='Error', message=f"Could not find the file {self.filename}", icon="warning")
+            CTkMessagebox(title='Error', message=f"Impossible de trouver le fichier {self.filename}", icon="warning")  # Could not find the file
         except AttributeError:
-            CTkMessagebox(title='Error', message="No CSV file selected", icon="warning")
+            CTkMessagebox(title='Error', message="Aucun fichier CSV sélectionné", icon="warning")  # No CSV file selected
         except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+            msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer',  # An error occured # Close
+                                option_2='Afficher un message d´erreur', icon='warning')  # Display error message
 
-            if msg.get() == 'Display error message':
+            if msg.get() == 'Afficher un message d´erreur':  # 'Display error message':
                 self.error_popup(e)
 
         self.stop_progress()
@@ -1509,29 +1644,28 @@ class ScenarioTab(CTkScrollableFrame):
         self.dispaly_csv_button.configure(state='normal')
 
 
-
 class ResultsTab(CTkTabview):
     def __init__(self, parent):
         super().__init__(parent)
         self.grid(row=0, column=1, rowspan=4, padx=20, pady=20, sticky="nsew")
-        self.add('Map')
-        self.add('Charts')
+        self.add('Carte')  # Map
+        self.add('Graphiques')  # Charts
 
         #self.df = pd.read_csv(r'C:\DRC\gui_test\0_2_1_1_1_0\cd-0_2_1_1_1_0.csv')
 
-        self.map_frame = CTkFrame(self.tab('Map'))
+        self.map_frame = CTkFrame(self.tab('Carte'))
         self.map_frame.place(relheight=0.9, relwidth=1)
-        self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.general_inputs['end_year'].get()))
+        self.load_map_button = CTkButton(self.tab('Carte'), text='Charger la carte', command=lambda: self.scatter_plot(self.map_frame, parent.scenario.df, parent.scenario.general_inputs['end_year'].get()))  # Load map
         #self.load_map_button = CTkButton(self.tab('Map'), text='Load map', command=lambda: self.scatter_plot(self.map_frame, self.df, 2030))
         self.load_map_button.place(rely=0.925, relwidth=0.2, relx=0.5)
-        self.background = CTkOptionMenu(self.tab('Map'), values=["OpenStreetMap", "Light", "Dark", "Colorful"])
+        self.background = CTkOptionMenu(self.tab('Carte'), values=["OpenStreetMap", "Light", "Dark", "Colorful"])
         self.background.place(rely=0.925, relwidth=0.2, relx=0.25)
-        self.background_label = CTkLabel(self.tab('Map'), text='Background map:')
+        self.background_label = CTkLabel(self.tab('Carte'), text='Carte de fond:')  # Background map
         self.background_label.place(rely=0.925, relwidth=0.1, relx=0.13)
 
-        self.chart_frame = CTkFrame(self.tab('Charts'))
+        self.chart_frame = CTkFrame(self.tab('Graphiques'))
         self.chart_frame.place(relheight=0.9, relwidth=1)
-        self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.general_inputs['intermediate_year'].get(), parent.scenario.general_inputs['end_year'].get()))
+        self.load_chart_button = CTkButton(self.tab('Graphiques'), text='Charger des graphiques', command=lambda: self.vis_charts(self.chart_frame, parent.scenario.df, parent.scenario.general_inputs['intermediate_year'].get(), parent.scenario.general_inputs['end_year'].get()))  # Load charts
         #self.load_chart_button = CTkButton(self.tab('Charts'), text='Load charts',command=lambda: self.vis_charts(self.chart_frame, self.df, 2025, 2030))
         self.load_chart_button.place(rely=0.925, relwidth=0.2, relx=0.4)
 
@@ -1555,13 +1689,13 @@ class ResultsTab(CTkTabview):
         error_frame.insert("0.0", traceback.format_exc())
         error_frame.place(relwidth=1, relheight=1)
 
-        save_button = CTkButton(popup, text='Save error message', command=lambda: save_error(error))
+        save_button = CTkButton(popup, text='Enregistrer le message d´erreur', command=lambda: save_error(error))  # Save error message
         save_button.place(relx=0.5, rely=0.9, anchor='s')
 
     def scatter_plot(self, map_frame, df, end_year):
         try:
             if df.size == 0:
-                CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+                CTkMessagebox(title='OnSSET', message='Aucun résultat à afficher, exécutez d´abord un scénario', icon='warning')  # No results to display, first run a scenario
             else:
                 if self.background.get() == "Colorful":
                     background = cx.providers.CartoDB.Voyager
@@ -1623,21 +1757,21 @@ class ResultsTab(CTkTabview):
 
                 self.legend_frame = CTkFrame(map_frame, border_width=5, width=20, height=100, fg_color='#222021')
                 self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-                self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
+                self.label_1 = CTkLabel(self.legend_frame, text="Reseau", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')  # Grid
                 self.label_1.grid(row=0, column=0, padx=30, pady=10)
-                self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+                self.label_2 = CTkLabel(self.legend_frame, text="Diesel autonome", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')  # Stand-alone Diesel
                 self.label_2.grid(row=1, column=0, padx=30, pady=10)
-                self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
+                self.label_3 = CTkLabel(self.legend_frame, text="PV autonome", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')  # Stand-alone PV
                 self.label_3.grid(row=2, column=0, padx=30, pady=10)
-                self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+                self.label_4 = CTkLabel(self.legend_frame, text="Mini-réseau Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')  # Mini-grid Diesel
                 self.label_4.grid(row=3, column=0, padx=30, pady=10)
-                self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
+                self.label_5 = CTkLabel(self.legend_frame, text="Mini-réseau PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')  #  Mini-grid PV
                 self.label_5.grid(row=4, column=0, padx=30, pady=10)
-                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-réseau Éolien", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')  # Mini-grid Wind
                 self.label_6.grid(row=5, column=0, padx=30, pady=10)
-                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-réseau Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')  # Mini-grid Hydro
                 self.label_6.grid(row=6, column=0, padx=30, pady=10)
-                self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
+                self.label_99 = CTkLabel(self.legend_frame, text="Non électrifié", font=CTkFont(size=14, weight='bold'), text_color='#808080')  # Unelectrified
                 self.label_99.grid(row=7, column=0, padx=30, pady=10)
 
                 try:
@@ -1647,16 +1781,16 @@ class ResultsTab(CTkTabview):
                 self.toolbar = NavigationToolbar2Tk(canvas, map_frame)
                 self.toolbar.place(rely=0.9, relheight=0.1, relwidth=1)
         except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+            msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer',  # An error occured #  Close
+                                option_2='Afficher un message d´erreur', icon='warning')  # Display error message
 
-            if msg.get() == 'Display error message':
+            if msg.get() == 'Afficher un message d´erreur':  #'Display error message':
                 self.error_popup(e)
 
     def vis_charts(self, frame_charts, df, intermediate_year, end_year):
         try:
             if df.size == 0:
-                CTkMessagebox(title='OnSSET', message='No results to display, first run a scenario', icon='warning')
+                CTkMessagebox(title='OnSSET', message='Aucun résultat à afficher, exécutez d´abord un scénario', icon='warning')  # No results to display, first run a scenario
             else:
                 yearsofanalysis = [intermediate_year, end_year]
 
@@ -1730,7 +1864,7 @@ class ResultsTab(CTkTabview):
                 plt.rcParams["figure.figsize"] = fig_size
 
                 sns.barplot(x=summary_plot.index.tolist(), y=columns[4], data=summary_plot, ax=axarr[0, 0], palette=colors)
-                axarr[0, 0].set_ylabel('Population (Million)', fontsize=9)
+                axarr[0, 0].set_ylabel('Population (millions)', fontsize=9)  #  Population (Million)
                 axarr[0, 0].tick_params(labelsize=font_size)
                 axarr[0, 0].set_facecolor('#7f7f7f')
                 axarr[0, 0].set_xticklabels([])
@@ -1738,21 +1872,21 @@ class ResultsTab(CTkTabview):
                 axarr[0, 0].set_axisbelow(True)
                 #axarr[0, 0].grid(True)
                 sns.barplot(x=summary_plot.index.tolist(), y=columns[5], data=summary_plot, ax=axarr[0, 1], palette=colors)
-                axarr[0, 1].set_ylabel('New Connections (Million)', fontsize=9)
+                axarr[0, 1].set_ylabel('Nouvelles connexions (millions)', fontsize=9)  #  New Connections (Million)
                 axarr[0, 1].tick_params(labelsize=font_size)
                 axarr[0, 1].set_facecolor('#7f7f7f')
                 axarr[0, 1].set_xticklabels([])
                 axarr[0, 1].yaxis.grid(True)
                 axarr[0, 1].set_axisbelow(True)
                 sns.barplot(x=summary_plot.index.tolist(), y=columns[6], data=summary_plot, ax=axarr[1, 0], palette=colors)
-                axarr[1, 0].set_ylabel('New capacity (MW)', fontsize=9)
+                axarr[1, 0].set_ylabel('Nouvelle capacité (MW)', fontsize=9)  # New capacity (MW)
                 axarr[1, 0].tick_params(labelsize=font_size)
                 axarr[1, 0].set_facecolor('#7f7f7f')
                 axarr[1, 0].set_xticklabels([])
                 axarr[1, 0].yaxis.grid(True)
                 axarr[1, 0].set_axisbelow(True)
                 sns.barplot(x=summary_plot.index.tolist(), y=columns[7], data=summary_plot, ax=axarr[1, 1], palette=colors)
-                axarr[1, 1].set_ylabel('Investments (million USD)', fontsize=9)
+                axarr[1, 1].set_ylabel('Investissements (millions USD)', fontsize=9)  # Investments (million USD)
                 axarr[1, 1].tick_params(labelsize=font_size)
                 axarr[1, 1].set_facecolor('#7f7f7f')
                 axarr[1, 1].set_xticklabels([])
@@ -1771,27 +1905,27 @@ class ResultsTab(CTkTabview):
 
                 self.legend_frame = CTkFrame(frame_charts, border_width=5, width=20, height=100, fg_color='#222021')
                 self.legend_frame.place(rely=0.5, relx=1, anchor=E)
-                self.label_1 = CTkLabel(self.legend_frame, text="Grid", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')
+                self.label_1 = CTkLabel(self.legend_frame, text="Reseau", font=CTkFont(size=14, weight='bold'), text_color='#4e53de')  # Grid
                 self.label_1.grid(row=0, column=0, padx=30, pady=10)
-                self.label_2 = CTkLabel(self.legend_frame, text="Stand-alone Diesel", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')
+                self.label_2 = CTkLabel(self.legend_frame, text="Diesel autonome", font=CTkFont(size=14, weight='bold'), text_color='#f67c41')  # Stand-alone Diesel
                 self.label_2.grid(row=1, column=0, padx=30, pady=10)
-                self.label_3 = CTkLabel(self.legend_frame, text="Stand-alone PV", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')
+                self.label_3 = CTkLabel(self.legend_frame, text="PV autonome", font=CTkFont(size=14, weight='bold'), text_color='#ffc700')  # Stand-alone PV
                 self.label_3.grid(row=2, column=0, padx=30, pady=10)
-                self.label_4 = CTkLabel(self.legend_frame, text="Mini-grid Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')
+                self.label_4 = CTkLabel(self.legend_frame, text="Mini-réseau Diesel", font=CTkFont(size=14, weight='bold'), text_color='#4b0082')  # Mini-grid Diesel
                 self.label_4.grid(row=3, column=0, padx=30, pady=10)
-                self.label_5 = CTkLabel(self.legend_frame, text="Mini-grid PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')
+                self.label_5 = CTkLabel(self.legend_frame, text="Mini-réseau PV", font=CTkFont(size=14, weight='bold'), text_color='#e628a0')  # Mini-grid PV
                 self.label_5.grid(row=4, column=0, padx=30, pady=10)
-                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Wind", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-réseau Éolien", font=CTkFont(size=14, weight='bold'), text_color='#1b8f4d')  # Mini-grid Wind
                 self.label_6.grid(row=5, column=0, padx=30, pady=10)
-                self.label_6 = CTkLabel(self.legend_frame, text="Mini-grid Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')
+                self.label_6 = CTkLabel(self.legend_frame, text="Mini-réseau Hydro", font=CTkFont(size=14, weight='bold'), text_color='#28e66d')  # Mini-grid Hydro
                 self.label_6.grid(row=6, column=0, padx=30, pady=10)
                 # self.label_99 = CTkLabel(self.legend_frame, text="Unelectrified", font=CTkFont(size=14, weight='bold'), text_color='#808080')
                 # self.label_99.grid(row=5, column=0, padx=30, pady=10)
         except Exception as e:
-            msg = CTkMessagebox(title='OnSSET', message='An error occured', option_1='Close',
-                                option_2='Display error message', icon='warning')
+            msg = CTkMessagebox(title='OnSSET', message='Une erreur s´est produite', option_1='Fermer',  # An error occured #  Close
+                                option_2='Afficher un message d´erreur', icon='warning')  # Display error message
 
-            if msg.get() == 'Display error message':
+            if msg.get() == 'Afficher un message d´erreur':  # 'Display error message':
                 self.error_popup(e)
 
 
